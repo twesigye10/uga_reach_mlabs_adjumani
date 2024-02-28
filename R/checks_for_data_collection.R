@@ -1,9 +1,8 @@
 library(tidyverse)
-library(glue)
 library(cleaningtools)
 library(httr)
 library(supporteR)
-library(lubridate)
+library(openxlsx)
 
 source("R/support_functions.R")
 source("support_files/credentials.R")
@@ -55,18 +54,18 @@ audit_list_data <- cleaningtools::create_audit_list(audit_zip_path = "inputs/aud
 df_tool_data_with_audit_time <- cleaningtools::add_duration_from_audit(df_tool_data, uuid_column = "_uuid", audit_list = audit_list_data)
 
 
-# check logics ------------------------------------------------------------
-check_list <- read_csv("inputs/logical_check_list.csv")
-df_logical_checks <- cleaningtools::check_logical_with_list(df_tool_data,
-                                                            uuid_column = "_uuid",
-                                                            list_of_check = check_list,
-                                                            check_id_column = "name",
-                                                            check_to_perform_column = "check",
-                                                            columns_to_clean_column = "variables_to_clean",
-                                                            description = "description"
-)
-
-df_logical_checks$logical_all %>% view()
+# # check logics ------------------------------------------------------------
+# check_list <- read_csv("inputs/logical_check_list.csv")
+# df_logical_checks <- cleaningtools::check_logical_with_list(df_tool_data,
+#                                                             uuid_column = "_uuid",
+#                                                             list_of_check = check_list,
+#                                                             check_id_column = "name",
+#                                                             check_to_perform_column = "check",
+#                                                             columns_to_clean_column = "variables_to_clean",
+#                                                             description = "description"
+# )
+# 
+# df_logical_checks$logical_all %>% view()
 
 
 
@@ -76,6 +75,9 @@ df_logical_checks$logical_all %>% view()
 outlier_cols_not_4_checking <- df_tool_data %>% 
     select(matches("geopoint|gps|_index|_submit|submission|_sample_|^_id$")) %>% 
     colnames()
+
+# logical checks data
+df_list_logical_checks <- read_csv("inputs/logical_check_list.csv")
 
 # create_combined_log()
 list_log <- df_tool_data_with_audit_time %>%
@@ -95,13 +97,13 @@ list_log <- df_tool_data_with_audit_time %>%
                           threshold = 7,
                           return_all_results = FALSE) %>%
     check_value(uuid_column = "_uuid", values_to_look = c(666, 99, 999, 9999, 98, 88, 888, 8888)) %>% 
-    
     check_logical_with_list(uuid_column = "_uuid",
-                  list_of_check = check_list,
+                  list_of_check = df_list_logical_checks,
                   check_id_column = "name",
                   check_to_perform_column = "check",
                   columns_to_clean_column = "variables_to_clean",
-                  description = "description")
+                  description = "description",
+                  bind_checks = TRUE)
 
 
 # others checks
@@ -144,24 +146,88 @@ list_log$enum_similarity <- df_sil_processed
 
 df_combined_log <- create_combined_log(dataset_name = "checked_dataset", list_of_log = list_log)
 
-# add_info_to_cleaning_log()
-add_with_info <- add_info_to_cleaning_log(list_of_log = df_combined_log,
-                                                  dataset = "checked_dataset",
-                                                  cleaning_log = "cleaning_log",
-                                                  dataset_uuid_column = "_uuid",
-                                                  cleaning_log_uuid_column = "uuid",
-                                                  information_to_add = c("enumerator_id", "today", "meta_village_name")
+# # add_info_to_cleaning_log()
+# add_with_info <- add_info_to_cleaning_log(list_of_log = df_combined_log,
+#                                                   dataset = "checked_dataset",
+#                                                   cleaning_log = "cleaning_log",
+#                                                   dataset_uuid_column = "_uuid",
+#                                                   cleaning_log_uuid_column = "uuid",
+#                                                   information_to_add = c("enumerator_id", "today", "meta_village_name")
+# )
+# 
+# # create_xlsx_cleaning_log()
+# add_with_info |>
+#     create_xlsx_cleaning_log(
+#         kobo_survey = df_survey,
+#         kobo_choices = df_choices,
+#         use_dropdown = TRUE,
+#         output_path = paste0("outputs/", butteR::date_file_prefix(), 
+#                              "_combined_checks_adjumani_echo_assessment.xlsx")
+#     )
+
+
+
+# create workbook --------------------------------------------------------
+# prepare data
+cols_to_add_to_log <- c("enumerator_id", "today", "meta_village_name")
+
+tool_support <- df_combined_log$checked_dataset %>% 
+    select(uuid = `_uuid`, any_of(cols_to_add_to_log))
+
+df_prep_checked_data <- df_combined_log$checked_dataset
+df_prep_cleaning_log <- df_combined_log$cleaning_log %>%
+    left_join(tool_support, by = "uuid") %>% 
+    relocate(any_of(cols_to_add_to_log), .after = uuid)
+
+df_prep_readme <- tibble::tribble(
+    ~change_type_validation,                       ~description,
+    "change_response", "Change the response to new_value",
+    "blank_response",       "Remove and NA the response",
+    "remove_survey",                "Delete the survey",
+    "no_action",               "No action to take."
 )
 
-# create_xlsx_cleaning_log()
-add_with_info |>
-    create_xlsx_cleaning_log(
-        kobo_survey = df_survey,
-        kobo_choices = df_choices,
-        use_dropdown = TRUE,
-        output_path = paste0("outputs/", butteR::date_file_prefix(), 
-                             "_combined_checks_adjumani_echo_assessment.xlsx")
-    )
+wb_log <- createWorkbook()
+
+hs1 <- createStyle(fgFill = "#E34443", textDecoration = "Bold", fontName = "Arial Narrow", fontColour = "white", fontSize = 12, wrapText = F)
+
+modifyBaseFont(wb = wb_log, fontSize = 11, fontName = "Arial Narrow")
+
+addWorksheet(wb_log, sheetName="checked_dataset")
+setColWidths(wb = wb_log, sheet = "checked_dataset", cols = 1:ncol(df_prep_checked_data), widths = 24.89)
+writeDataTable(wb = wb_log, sheet = "checked_dataset", 
+               x = df_prep_checked_data , 
+               startRow = 1, startCol = 1, 
+               tableStyle = "TableStyleLight9",
+               headerStyle = hs1)
+# freeze pane
+freezePane(wb = wb_log, "checked_dataset", firstActiveRow = 2, firstActiveCol = 2)
+
+
+addWorksheet(wb_log, sheetName="cleaning_log")
+setColWidths(wb = wb_log, sheet = "cleaning_log", cols = 1:ncol(df_prep_cleaning_log), widths = 24.89)
+writeDataTable(wb = wb_log, sheet = "cleaning_log", 
+               x = df_prep_cleaning_log , 
+               startRow = 1, startCol = 1, 
+               tableStyle = "TableStyleLight9",
+               headerStyle = hs1)
+# freeze pane
+freezePane(wb = wb_log, "cleaning_log", firstActiveRow = 2, firstActiveCol = 2)
+
+addWorksheet(wb_log, sheetName="readme")
+setColWidths(wb = wb_log, sheet = "readme", cols = 1:ncol(df_prep_readme), widths = 24.89)
+writeDataTable(wb = wb_log, sheet = "readme", 
+               x = df_prep_readme , 
+               startRow = 1, startCol = 1, 
+               tableStyle = "TableStyleLight9",
+               headerStyle = hs1)
+# freeze pane
+freezePane(wb = wb_log, "readme", firstActiveRow = 2, firstActiveCol = 2)
+
+# openXL(wb_log)
+
+saveWorkbook(wb_log, paste0("outputs/", butteR::date_file_prefix(),"_combined_checks_adjumani_echo_assessment.xlsx"), overwrite = TRUE)
+openXL(file = paste0("outputs/", butteR::date_file_prefix(),"_combined_checks_adjumani_echo_assessment.xlsx"))
 
 
 
