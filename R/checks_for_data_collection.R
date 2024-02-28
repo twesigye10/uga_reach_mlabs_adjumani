@@ -3,6 +3,7 @@ library(glue)
 library(cleaningtools)
 library(httr)
 library(supporteR)
+library(lubridate)
 
 source("R/support_functions.R")
 source("support_files/credentials.R")
@@ -54,6 +55,21 @@ audit_list_data <- cleaningtools::create_audit_list(audit_zip_path = "inputs/aud
 df_tool_data_with_audit_time <- cleaningtools::add_duration_from_audit(df_tool_data, uuid_column = "_uuid", audit_list = audit_list_data)
 
 
+# check logics ------------------------------------------------------------
+logical_check_list <- "inputs/logical_check_list.csv"
+cleaningtools::check_logical_with_list(df_tool_data,
+                             uuid_column = "_uuid",
+                             list_of_check = logical_check_list,
+                             check_id_column = "check_id",
+                             check_to_perform_column = "check_to_perform",
+                             columns_to_clean_column = "columns_to_clean",
+                             description = "description"
+) %>% head()
+
+
+
+
+
 
 # Exporting the flags in excel --------------------------------------------
 
@@ -63,7 +79,7 @@ outlier_cols_not_4_checking <- df_tool_data %>%
     colnames()
 
 # create_combined_log()
-list_log_refugee <- df_tool_data_with_audit_time %>%
+list_log <- df_tool_data_with_audit_time %>%
     check_pii(uuid_column = "_uuid") %>%
     check_duration(column_to_check = "duration_audit_sum_all_minutes",
                    uuid_column = "_uuid",
@@ -72,7 +88,7 @@ list_log_refugee <- df_tool_data_with_audit_time %>%
                    higher_bound = 120) %>% 
     check_outliers(uuid_column = "_uuid", sm_separator = "/",
                    strongness_factor = 3, columns_not_to_check = outlier_cols_not_4_checking) %>% 
-    check_soft_duplicates(kobo_survey = df_survey_refugee,
+    check_soft_duplicates(kobo_survey = df_survey,
                           uuid_column = "_uuid",
                           idnk_value = "dk",
                           sm_separator = "/",
@@ -82,12 +98,12 @@ list_log_refugee <- df_tool_data_with_audit_time %>%
     check_value(uuid_column = "_uuid", values_to_look = c(666, 99, 999, 9999, 98, 88, 888, 8888))
 
 # others checks
-df_other_checks_refugee <- cts_format_other_specify(input_tool_data = df_tool_data_refugee, 
+df_other_checks <- cts_format_other_specify(input_tool_data = df_tool_data, 
                                                     input_uuid_col = "_uuid", 
-                                                    input_survey = df_survey_refugee, 
-                                                    input_choices = df_choices_refugee)
+                                                    input_survey = df_survey, 
+                                                    input_choices = df_choices)
 # add other checks to the list
-list_log_refugee$other_log <- df_other_checks
+list_log$other_log <- df_other_checks
 
 
 # silhouette analysis -----------------------------------------------------
@@ -97,13 +113,13 @@ omit_cols_sil <- c("start", "end", "today", "duration", "duration_minutes",
                    "deviceid", "audit", "audit_URL", "instance_name", "end_survey",
                    "geopoint", "_geopoint_latitude", "_geopoint_altitude", "_geopoint_precision", "_id" ,"_submission_time","_validation_status","_notes","_status","_submitted_by","_tags","_index")
 
-data_similartiy_sil <- df_tool_data_refugee %>% 
+data_similartiy_sil <- df_tool_data %>% 
     select(- any_of(omit_cols_sil), - matches("_note$|^note_"))
 
 df_sil_data <- calculateEnumeratorSimilarity(data = data_similartiy_sil,
                                              input_df_survey = df_survey, 
                                              col_enum = "enumerator_id",
-                                             col_admin = "interview_cell") %>% 
+                                             col_admin = "meta_village_name") %>% 
     mutate(si2= abs(si))
 
 df_sil_processed <- df_sil_data[order(df_sil_data$`si2`, decreasing = TRUE),!colnames(df_sil_data)%in%"si2"] %>%  
@@ -114,30 +130,30 @@ df_sil_processed <- df_sil_data[order(df_sil_data$`si2`, decreasing = TRUE),!col
     batch_select_rename()
 
 # add other checks to the list
-list_log_refugee$enum_similarity <- df_sil_processed
+list_log$enum_similarity <- df_sil_processed
 
 
 # combine the checks ------------------------------------------------------
 
-df_combined_log_refugee <- create_combined_log(dataset_name = "checked_dataset", list_of_log = list_log_refugee)
+df_combined_log <- create_combined_log(dataset_name = "checked_dataset", list_of_log = list_log)
 
 # add_info_to_cleaning_log()
-add_with_info_refugee <- add_info_to_cleaning_log(list_of_log = df_combined_log_refugee,
+add_with_info <- add_info_to_cleaning_log(list_of_log = df_combined_log,
                                                   dataset = "checked_dataset",
                                                   cleaning_log = "cleaning_log",
                                                   dataset_uuid_column = "_uuid",
                                                   cleaning_log_uuid_column = "uuid",
-                                                  information_to_add = c("enumerator_id", "today", "interview_cell")
+                                                  information_to_add = c("enumerator_id", "today", "meta_village_name")
 )
 
 # create_xlsx_cleaning_log()
-add_with_info_refugee |>
+add_with_info |>
     create_xlsx_cleaning_log(
-        kobo_survey = df_survey_refugee,
-        kobo_choices = df_choices_refugee,
+        kobo_survey = df_survey,
+        kobo_choices = df_choices,
         use_dropdown = TRUE,
         output_path = paste0("outputs/", butteR::date_file_prefix(), 
-                             "_combined_checks_aba_mbarara_refugee.xlsx")
+                             "_combined_checks_adjumani_echo_assessment.xlsx")
     )
 
 
