@@ -56,18 +56,17 @@ df_tool_data_with_audit_time <- cleaningtools::add_duration_from_audit(df_tool_d
 
 
 # check logics ------------------------------------------------------------
-logical_check_list <- "inputs/logical_check_list.csv"
-cleaningtools::check_logical_with_list(df_tool_data,
-                             uuid_column = "_uuid",
-                             list_of_check = logical_check_list,
-                             check_id_column = "check_id",
-                             check_to_perform_column = "check_to_perform",
-                             columns_to_clean_column = "columns_to_clean",
-                             description = "description"
-) %>% head()
+check_list <- read_csv("inputs/logical_check_list.csv")
+df_logical_checks <- cleaningtools::check_logical_with_list(df_tool_data,
+                                                            uuid_column = "_uuid",
+                                                            list_of_check = check_list,
+                                                            check_id_column = "name",
+                                                            check_to_perform_column = "check",
+                                                            columns_to_clean_column = "variables_to_clean",
+                                                            description = "description"
+)
 
-
-
+df_logical_checks$logical_all %>% view()
 
 
 
@@ -95,7 +94,15 @@ list_log <- df_tool_data_with_audit_time %>%
                           log_name = "soft_duplicate_log",
                           threshold = 7,
                           return_all_results = FALSE) %>%
-    check_value(uuid_column = "_uuid", values_to_look = c(666, 99, 999, 9999, 98, 88, 888, 8888))
+    check_value(uuid_column = "_uuid", values_to_look = c(666, 99, 999, 9999, 98, 88, 888, 8888)) %>% 
+    
+    check_logical_with_list(uuid_column = "_uuid",
+                  list_of_check = check_list,
+                  check_id_column = "name",
+                  check_to_perform_column = "check",
+                  columns_to_clean_column = "variables_to_clean",
+                  description = "description")
+
 
 # others checks
 df_other_checks <- cts_format_other_specify(input_tool_data = df_tool_data, 
