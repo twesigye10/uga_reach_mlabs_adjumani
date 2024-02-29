@@ -1,14 +1,13 @@
 ---
 title: "field_data_collection_tracker"
-author: "REACH"
-date: "2024-02-26"
-output: 
-     html_document:
-     toc: true
-toc_float:
-    collapsed: false
-smooth_scroll: false
-knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding = encoding, output_file = paste0(dirname(inputFile), '/Adjumani_ECHO_field_data_collection_tracker_', format(Sys.Date(), '%Y_%m_%d'),'.html')) })
+author: "IMPACT"
+output:
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding = encoding, output_file = paste0(dirname(inputFile), '/aba_adjumani_field_data_collection_tracker_', format(Sys.Date(), '%Y_%m_%d'),'.html')) })
 ---
 
 ```{r setup, include=FALSE}
@@ -20,7 +19,7 @@ library(lubridate)
 library(glue)
 library(leaflet)
 
-# df_logical_check_description <- readxl::read_excel("../inputs/Energy_logical_checks_overview.xlsx") %>% 
+# df_logical_check_description <- readxl::read_excel("../inputs/aba_logical_checks_overview.xlsx") %>% 
 #     janitor::clean_names() %>% 
 #     select(check_number, check_description) %>% 
 #     mutate(check_number = as.character(check_number))
@@ -29,59 +28,62 @@ df_refugee_samples <- readr::read_csv("../inputs/Refugee_adjumani_aba_survey_sam
 
 df_for_colnames <- df_refugee_samples %>% 
     mutate(across(where(is.character), str_to_lower)) %>%
-    mutate(meta_division_name = subcounty_division_settlement,
-           meta_division_name = str_replace_all(string = meta_division_name, pattern = " ", replacement = "_"),
-           meta_village_name = village_cell,
-           meta_village_name = str_replace_all(string = meta_village_name, pattern = " ", replacement = "_"))%>% 
-    select(meta_division_name, village_cell) %>% 
+    rename(division_name = subcounty_division_settlement) %>% 
+    mutate(division_name = division_name,
+       division_name = str_replace_all(string = division_name, pattern = " ", replacement = "_"),
+       meta_village_name = str_to_lower(village_cell),
+       meta_village_name = str_replace_all(string = meta_village_name, pattern = " ", replacement = "_")
+) %>% 
+    select(division_name, meta_village_name) %>% 
     unique()
 
-df_settlement_samples_required <- df_refugee_samples %>% 
+df_village_name_samples_required <- df_refugee_samples %>% 
     rename(meta_village_name = village_cell) %>% 
-    select(meta_division_name, sample_size) %>% 
-    mutate(meta_division_name = str_to_lower(meta_division_name),
-           meta_division_name = str_replace_all(string = meta_division_name, pattern = " ", replacement = "_"))
+    select(meta_village_name, sample_size) %>% 
+    mutate(meta_village_name = str_to_lower(meta_village_name),
+           meta_village_name = str_replace_all(string = meta_village_name, pattern = " ", replacement = "_"))
 
 df_host_samples <- readr::read_csv("../inputs/Host_community_adjumani_aba_survey_samples_definition.csv")
 
 df_for_host_colnames <- df_host_samples %>% 
     mutate(across(where(is.character), str_to_lower)) %>% 
-    rename(meta_village_name =  village_cell ) %>%
-    mutate(meta_division_name = subcounty_division_settlement,
-           meta_division_name = str_replace_all(string = district_name, pattern = " ", replacement = "_"),
-           village_cell = str_to_lower(village_cell),
-           village_cell = str_replace_all(string = village_cell, pattern = " ", replacement = "_")
+    rename(division_name = subcounty_division_settlement) %>%
+    mutate(division_name = division_name,
+           division_name = str_replace_all(string = division_name, pattern = " ", replacement = "_"),
+           village_name = str_to_lower(village_name),
+           village_name = str_replace_all(string = village_name, pattern = " ", replacement = "_")
     ) %>% 
-    select(meta_division_name, village_cell) %>% 
+    select(division_name, village_name) %>% 
     unique()
 
 df_host_samples_required <- df_host_samples %>% 
-    rename(village_cell =  village_cell ) %>%
-    select(meta_division_name, sample_size) %>% 
-    mutate(meta_division_name = str_to_lower(meta_division_name),
-           meta_division_name = str_replace_all(string = meta_division_name, pattern = " ", replacement = "_")
+    rename(village_name =  village_cell ) %>%
+    select(village_name, sample_size) %>% 
+    mutate(village_name = str_to_lower(village_name),
+           village_name = str_replace_all(string = village_name, pattern = " ", replacement = "_")
     )
 
-df_tool_data <- readxl::read_excel("../inputs/UGA2401_Adjumani_ECHO_data.xlsx") %>% 
+df_tool_data <- readxl::read_excel("../inputs/UGA2401_Adjumani_ECHO_data.xlsx") %>%
     rename_with(~str_replace(string = .x, pattern = "meta_", replacement = "")) %>% 
+    # rename(division_name = division_name_name, village_name = refugee_village_name) %>% 
     mutate(uuid = `_uuid`,
            start_date = as_date(start),
            start = as_datetime(start),
            end = as_datetime(end),
-           meta_village_name = as.character(meta_village_name),
+           village_name = as.character(village_name),
            latitude = as.numeric(`_geopoint_latitude`),
-           longitude = as.numeric(`_geopoint_longitude`),
-           refugee_settlement = ifelse(refugee_settlement == "adjumani", str_to_lower(refugee_settlement_zone), refugee_settlement)) 
-# !str_detect(string = point_number, pattern = fixed('test', ignore_case = TRUE))
+           longitude = as.numeric(`_geopoint_longitude`))
 
 # days that contain data
 df_days_for_data_collection <- df_tool_data %>% select(start_date) %>% unique() %>% arrange(start_date) %>% pull()
 
 df_data_support_cl_log <- df_tool_data %>% 
-    select(uuid, status, sub_county_div,	refugee_settlement, latitude,	longitude )
+    select(uuid, status, division_name,	village_name, latitude,	longitude )
 
 # cleaning log handling
 df_cl_log <- read_csv(file = "../inputs/combined_checks.csv") %>% 
+    rename(village_name = meta_village_name) %>% 
+    filter(!str_detect(string = point_number, pattern = fixed('test', ignore_case = TRUE))) %>% 
     mutate(adjust_log = ifelse(is.na(adjust_log), "apply_suggested_change", adjust_log)) %>% 
     left_join(df_data_support_cl_log, by = "uuid")
 
@@ -120,56 +122,56 @@ df_enum_performance <- df_updated_tool_data %>%
 
 # functions for changing some options in the table
 dt_set_options<- function(x){
-    DT::datatable(x,
-                  options = list(
-                      autoWidth=F,
-                      dom= 't',
-                      list(list(width = '20%', targets = list(1,2,3,4,5)))
-                  )
-    )
+  DT::datatable(x,
+                options = list(
+                  autoWidth=F,
+                  dom= 't',
+                  list(list(width = '20%', targets = list(1,2,3,4,5)))
+                )
+  )
 }
 
 dt_with_modified_options <- function(x){
-    DT::datatable(x,
-                  rownames = FALSE,
-                  options = list(
-                      columnDefs = list(list(className = 'dt-center', targets = list(1,2,3,4,5))),
-                      pageLength = 20,
-                      initComplete = JS(
-                          "function(settings, json) {",
-                          "$(this.api().table().header()).css({'background-color': '#333', 'color': '#fff'});",
-                          "}")
-                  )
-    )
+  DT::datatable(x,
+                rownames = FALSE,
+                options = list(
+                  columnDefs = list(list(className = 'dt-center', targets = list(1,2,3,4,5))),
+                  pageLength = 15,
+                  initComplete = JS(
+                    "function(settings, json) {",
+                    "$(this.api().table().header()).css({'background-color': '#333', 'color': '#fff'});",
+                    "}")
+                )
+  )
 }
 
 dt_options_fewcols <- function(x){
-    DT::datatable(x,
-                  rownames = FALSE,
-                  options = list(
-                      pageLength = 20,
-                      initComplete = JS(
-                          "function(settings, json) {",
-                          "$(this.api().table().header()).css({'background-color': '#333', 'color': '#fff'});",
-                          "}")
-                  )
-    )
+  DT::datatable(x,
+                rownames = FALSE,
+                options = list(
+                  pageLength = 10,
+                  initComplete = JS(
+                    "function(settings, json) {",
+                    "$(this.api().table().header()).css({'background-color': '#333', 'color': '#fff'});",
+                    "}")
+                )
+  )
 }
 
 dt_enum_performance_options <- function(x){
-    DT::datatable(x,
-                  rownames = FALSE,
-                  filter = 'top',
-                  options = list(
-                      columnDefs = list(list(className = 'dt-center', targets = list(1,2))),
-                      pageLength = 50,
-                      initComplete = JS(
-                          "function(settings, json) {",
-                          "$(this.api().table().header()).css({'background-color': '#333', 'color': '#fff'});",
-                          "}"),
-                      order = list(list(1, 'desc'), list(0, 'asc'), list(3, 'desc'))
-                  )
-    )
+  DT::datatable(x,
+                rownames = FALSE,
+                filter = 'top',
+                options = list(
+                  columnDefs = list(list(className = 'dt-center', targets = list(1,2))),
+                  pageLength = 20,
+                  initComplete = JS(
+                    "function(settings, json) {",
+                    "$(this.api().table().header()).css({'background-color': '#333', 'color': '#fff'});",
+                    "}"),
+                  order = list(list(1, 'desc'), list(0, 'asc'), list(3, 'desc'))
+                )
+  )
 }
 ```
 
@@ -179,36 +181,38 @@ dt_enum_performance_options <- function(x){
 
 >The average survey time for all the data is: **`r round(mean(df_enum_performance$int.survey_time_interval), 0)`** Minutes
 
-### Settlements:  **`r df_updated_tool_data %>% filter(status == "refugee") %>% nrow()`** surveys
+### village_names:  **`r df_updated_tool_data %>% filter(status == "refugee") %>% nrow()`** surveys
 
 ```{r, echo = FALSE}
-df_refugee_samp_per_settlement <- df_settlement_samples_required %>% 
-    group_by(refugee_settlement) %>% 
-    summarise(required_samples = sum(sample_size, na.rm = TRUE))
+df_refugee_samp_per_village_name <- df_village_name_samples_required %>% 
+    group_by(village_name) %>% 
+    summarise(samples_with_buffer = sum(sample_size, na.rm = TRUE),
+              samples_without_buffer = sum(sample_size_without_buffer, na.rm = TRUE))
 
 df_cl_surveys_for_deletion <- df_cl_log %>% 
-    filter(status == "refugee",  type == "remove_survey", 
-           reviewed == 1, adjust_log != "delete_log") %>% 
-    group_by(refugee_settlement) %>% 
-    distinct(uuid) %>%
-    summarise(surveys_for_deletion = n())
+  filter(status == "refugee",  type == "remove_survey", 
+         reviewed == 1, adjust_log != "delete_log") %>% 
+  group_by(village_name) %>% 
+  distinct(uuid) %>%
+  summarise(surveys_for_deletion = n())
 
 df_updated_tool_data %>% 
-    filter(status == "refugee") %>% 
-    group_by(district_name, refugee_settlement) %>% 
-    summarise(number_of_surveys = n()) %>% 
-    arrange(district_name) %>% 
-    right_join(df_refugee_samp_per_settlement, by = "refugee_settlement") %>% 
-    left_join(df_cl_surveys_for_deletion, by = "refugee_settlement") %>% 
-    mutate(number_of_surveys = ifelse(is.na(number_of_surveys), 0, number_of_surveys),
-           surveys_for_deletion = ifelse(is.na(surveys_for_deletion), 0, surveys_for_deletion),
-           int.surveys_and_deletion = number_of_surveys - surveys_for_deletion,
-           remaining_surveys = required_samples - int.surveys_and_deletion ) %>% 
-    left_join(df_for_colnames, by = "refugee_settlement") %>% 
-    rename(district_name = district_name.x) %>%
-    mutate(district_name = district_name.y) %>%
-    select(-c(int.surveys_and_deletion, district_name.y)) %>% 
-    dt_with_modified_options()
+  filter(status == "refugee") %>% 
+  group_by(division_name, village_name) %>% 
+  summarise(surveys_completed = n()) %>% 
+  arrange(division_name) %>% 
+  right_join(df_refugee_samp_per_village_name, by = "village_name") %>% 
+  left_join(df_cl_surveys_for_deletion, by = "village_name") %>% 
+  mutate(surveys_completed = ifelse(is.na(surveys_completed), 0, surveys_completed),
+         surveys_for_deletion = ifelse(is.na(surveys_for_deletion), 0, surveys_for_deletion),
+         int.surveys_and_deletion = surveys_completed - surveys_for_deletion,
+         remaining_surveys_with_buffer = samples_with_buffer - int.surveys_and_deletion,
+         remaining_surveys_no_buffer = samples_without_buffer - int.surveys_and_deletion ) %>% 
+  left_join(df_for_colnames, by = "village_name") %>% 
+  rename(division_name = division_name.x) %>%
+  mutate(division_name = division_name.y) %>%
+  select(-c(int.surveys_and_deletion, division_name.y)) %>% 
+  dt_with_modified_options()
 
 ```
 
@@ -216,31 +220,33 @@ df_updated_tool_data %>%
 
 ```{r, echo = FALSE}
 df_host_samp_per_sub_county <- df_host_samples_required %>% 
-    group_by(sub_county_div) %>% 
-    summarise(required_samples = sum(sample_size, na.rm = TRUE))
+  group_by(village_name) %>% 
+  summarise(samples_with_buffer = sum(sample_size, na.rm = TRUE),
+            samples_without_buffer = sum(sample_size_without_buffer, na.rm = TRUE))
 
 df_cl_surveys_for_deletion <- df_cl_log %>% 
-    filter(status == "host_community", type == "remove_survey", reviewed == 1, adjust_log != "delete_log") %>%
-    group_by(sub_county_div) %>% 
-    distinct(uuid) %>%
-    summarise(surveys_for_deletion = n())
+  filter(status == "host_community", type == "remove_survey", reviewed == 1, adjust_log != "delete_log") %>%
+  group_by(village_name) %>% 
+  distinct(uuid) %>%
+  summarise(surveys_for_deletion = n())
 
 df_updated_tool_data %>% 
-    filter(status == "host_community") %>% 
-    group_by(district_name, sub_county_div) %>% 
-    summarise(number_of_surveys = n()) %>% 
-    arrange(district_name) %>% 
-    right_join(df_host_samp_per_sub_county, by = "sub_county_div") %>% 
-    left_join(df_cl_surveys_for_deletion, by = "sub_county_div") %>% 
-    mutate(number_of_surveys = ifelse(is.na(number_of_surveys), 0, number_of_surveys),
-           surveys_for_deletion = ifelse(is.na(surveys_for_deletion), 0, surveys_for_deletion),
-           int.surveys_and_deletion = number_of_surveys - surveys_for_deletion,
-           remaining_surveys = required_samples - int.surveys_and_deletion ) %>% 
-    left_join(df_for_host_colnames, by = "sub_county_div") %>% 
-    rename(district_name = district_name.x) %>%
-    mutate(district_name = district_name.y) %>%
-    select(-c(int.surveys_and_deletion, district_name.y)) %>% 
-    dt_with_modified_options()
+  filter(status == "host_community") %>% 
+  group_by(division_name, village_name) %>% 
+  summarise(surveys_completed = n()) %>% 
+  arrange(division_name) %>% 
+  right_join(df_host_samp_per_sub_county, by = "village_name") %>% 
+  left_join(df_cl_surveys_for_deletion, by = "village_name") %>% 
+  mutate(surveys_completed = ifelse(is.na(surveys_completed), 0, surveys_completed),
+         surveys_for_deletion = ifelse(is.na(surveys_for_deletion), 0, surveys_for_deletion),
+         int.surveys_and_deletion = surveys_completed - surveys_for_deletion,
+         remaining_surveys_with_buffer = samples_with_buffer - int.surveys_and_deletion,
+         remaining_surveys_no_buffer = samples_without_buffer - int.surveys_and_deletion) %>% 
+  left_join(df_for_host_colnames, by = "village_name") %>% 
+  rename(division_name = division_name.x) %>%
+  mutate(division_name = division_name.y) %>%
+  select(-c(int.surveys_and_deletion, division_name.y)) %>% 
+  dt_with_modified_options()
 ```
 
 ### Gender disaggregation by respondent status
@@ -248,7 +254,7 @@ df_updated_tool_data %>%
 ```{r, echo = FALSE}
 df_gender_disaggregation_refugee <-  df_tool_data %>% 
     filter(status == "refugee") %>% 
-    group_by(refugee_settlement) %>% 
+    group_by(village_name) %>% 
     count(respondent_gender) %>% 
     pivot_wider(names_from = respondent_gender,
                 values_from = n) %>% 
@@ -265,10 +271,10 @@ df_gender_disaggregation_refugee %>%
 
 df_gender_disaggregation_host <-  df_tool_data %>% 
     filter(status == "host_community") %>% 
-    group_by(sub_county_div) %>% 
+    group_by(village_name) %>% 
     count(respondent_gender) %>% 
     pivot_wider(names_from = respondent_gender,
-                values_from = n) %>% 
+                 values_from = n) %>% 
     replace(is.na(.),0) %>% 
     mutate(percentage_male = male/sum(female, male)*100, 
            percentage_female = female/sum(female, male)*100) %>% 
@@ -287,9 +293,9 @@ df_gender_disaggregation_host %>%
 ```{r, echo = FALSE}
 
 df_enum_performance %>% 
-    group_by(district_name, start_date, enumerator_id) %>% 
-    summarise(number_of_interviews_done = n(), `average_survey_time(minutes)` = round(mean(int.survey_time_interval, na.rm = TRUE), 0)) %>% 
-    dt_enum_performance_options()
+  group_by(division_name, start_date, enumerator_id) %>% 
+  summarise(number_of_interviews_done = n(), `average_survey_time(minutes)` = round(mean(int.survey_time_interval, na.rm = TRUE), 0)) %>% 
+  dt_enum_performance_options()
 ```
 
 ## Looking into the cleaning log
@@ -298,44 +304,44 @@ df_enum_performance %>%
 
 ```{r, echo = FALSE}
 df_cl_log %>% 
-    group_by(enumerator_id, issue_id, issue) %>% 
-    summarise(number_of_issues_by_issue_id = n()) %>%
-    mutate(int.issue_id = str_extract(string = issue_id, pattern = "[0-9]{1,3}")) %>% 
-    left_join(df_logical_check_description, by = c("int.issue_id" = "check_number")) %>% 
-    mutate(issue = ifelse(str_detect(string = issue_id, pattern = "[0-9]{1,3}"), paste(check_description, "[ ", issue, " ]"), issue)) %>% 
-    select(-c(int.issue_id, check_description)) %>% 
-    dt_options_fewcols()
+  group_by(enumerator_id, issue_id, issue) %>% 
+  summarise(number_of_issues_by_issue_id = n()) %>%
+  mutate(int.issue_id = str_extract(string = issue_id, pattern = "[0-9]{1,3}")) %>% 
+  left_join(df_logical_check_description, by = c("int.issue_id" = "check_number")) %>% 
+  mutate(issue = ifelse(str_detect(string = issue_id, pattern = "[0-9]{1,3}"), paste(check_description, "[ ", issue, " ]"), issue)) %>% 
+  select(-c(int.issue_id, check_description)) %>% 
+  dt_options_fewcols()
 ```
 ### Number of issues by enumerator
 
 ```{r, echo = FALSE}
 df_cl_log %>% 
-    group_by(district_name, enumerator_id) %>% 
-    summarise(number_of_issues_by_enumerator_id = n()) %>%
-    dt_options_fewcols()
+  group_by(division_name, enumerator_id) %>% 
+  summarise(number_of_issues_by_enumerator_id = n()) %>%
+  dt_options_fewcols()
 ```
 
 ### Number of issues by enumerator and issue_id
 
 ```{r, echo = FALSE}
 df_cl_log %>% 
-    group_by(issue_id) %>% 
-    summarise(number_of_issues_by_enumerator_and_issue_id = n()) %>%
-    mutate(int.issue_id = str_extract(string = issue_id, pattern = "[0-9]{1,3}")) %>% 
-    left_join(df_logical_check_description, by = c("int.issue_id" = "check_number")) %>% 
-    mutate(check_description = ifelse(str_detect(string = issue_id, pattern = "[0-9]{1,3}"), check_description, issue_id)) %>% 
-    select(-c(int.issue_id)) %>%
-    dt_options_fewcols()
+  group_by(issue_id) %>% 
+  summarise(number_of_issues_by_enumerator_and_issue_id = n()) %>%
+  mutate(int.issue_id = str_extract(string = issue_id, pattern = "[0-9]{1,3}")) %>% 
+  left_join(df_logical_check_description, by = c("int.issue_id" = "check_number")) %>% 
+  mutate(check_description = ifelse(str_detect(string = issue_id, pattern = "[0-9]{1,3}"), check_description, issue_id)) %>% 
+  select(-c(int.issue_id)) %>%
+  dt_options_fewcols()
 ```
 
 ### Enumerators with surveys for deletion
 
 ```{r, echo = FALSE}
 df_cl_log %>% 
-    filter(type == "remove_survey", reviewed == 1, adjust_log != "delete_log") %>% 
-    group_by(district_name, enumerator_id) %>% 
-    summarise(number_of_surveys_for_deletion_by_enumerator = n()) %>%
-    dt_options_fewcols()
+  filter(type == "remove_survey", reviewed == 1, adjust_log != "delete_log") %>% 
+  group_by(division_name, location, enumerator_id, point_number) %>% 
+  summarise(number_of_surveys_for_deletion_by_enumerator = n()) %>%
+  dt_options_fewcols()
 ```
 
 ### Map of surveys for deletion
@@ -343,45 +349,40 @@ df_cl_log %>%
 ```{r, echo = FALSE, out.width="100%"}
 # popup
 labels_pts <- ~sprintf(
-    "<strong>Status and Name: %s</strong><br/>
+  "<strong>Status and Name: %s</strong><br/>
       Point Number :  <strong>%s</strong><br/>
       Issue ID :  <strong>%s</strong><br/>
       Issue :  <strong>%s</strong><br/>
       Enumerator ID :  <strong>%s</strong>",
-    int.status, point_number, issue_id, issue, enumerator_id
+  int.status, point_number, issue_id, issue, enumerator_id
 ) %>% 
-    lapply(htmltools::HTML)
+  lapply(htmltools::HTML)
 
 df_cl_log %>% 
-    filter(type == "remove_survey", reviewed == 1, adjust_log != "delete_log") %>% 
-    group_by(uuid, status, sub_county_div, refugee_settlement, latitude, longitude) %>% 
-    summarise(start_date = paste(start_date, collapse = " : "),
-              enumerator_id = paste(enumerator_id, collapse = " : "),
-              district_name = paste(district_name, collapse = " : "),
-              point_number = paste(point_number, collapse = " : "),
-              type = paste(type, collapse = " : "),
-              name = paste(name, collapse = " : "),
-              current_value = paste(current_value, collapse = " : "),
-              value = paste(value, collapse = " : "),
-              issue_id = paste(issue_id, collapse = " : "),
-              issue = paste(issue, collapse = " : ")
-    ) %>% 
-    unique() %>% 
-    mutate(int.status = ifelse(status == "refugee", 
-                               glue("{status}_{refugee_settlement}"), glue("{status}_{sub_county_div}"))) %>% 
-    leaflet() %>% 
-    addTiles() %>%
-    addCircleMarkers(~longitude,
-                     ~latitude,
-                     popup = labels_pts,
-                     radius = 10,
-                     color = "red",
-                     stroke = FALSE, fillOpacity = 0.9,
-                     label = labels_pts,
-                     clusterOptions = markerClusterOptions())
-
-
-
-```
-
-
+  filter(type == "remove_survey", reviewed == 1, adjust_log != "delete_log") %>% 
+  group_by(uuid, status, village_name, village_name, latitude, longitude) %>% 
+  summarise(start_date = paste(start_date, collapse = " : "),
+            enumerator_id = paste(enumerator_id, collapse = " : "),
+            division_name = paste(division_name, collapse = " : "),
+            point_number = paste(point_number, collapse = " : "),
+            type = paste(type, collapse = " : "),
+            name = paste(name, collapse = " : "),
+            current_value = paste(current_value, collapse = " : "),
+            value = paste(value, collapse = " : "),
+            issue_id = paste(issue_id, collapse = " : "),
+            issue = paste(issue, collapse = " : ")
+  ) %>% 
+  unique() %>% 
+  mutate(int.status = ifelse(status == "refugee", 
+                             glue("{status}_{village_name}"), glue("{status}_{village_name}"))) %>% 
+  leaflet() %>% 
+  addTiles() %>%
+  addCircleMarkers(~longitude,
+                   ~latitude,
+                   popup = labels_pts,
+                   radius = 10,
+                   color = "red",
+                   stroke = FALSE, fillOpacity = 0.9,
+                   label = labels_pts,
+                   clusterOptions = markerClusterOptions())
+``````

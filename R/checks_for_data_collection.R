@@ -107,7 +107,7 @@ list_log <- df_tool_data_with_audit_time %>%
 
 
 # others checks
-df_other_checks <- cts_format_other_specify(input_tool_data = df_tool_data, 
+df_other_checks <- cts_format_other_specify(input_tool_data = df_tool_data %>% select(-other_expenditure_other), 
                                                     input_uuid_col = "_uuid", 
                                                     input_survey = df_survey, 
                                                     input_choices = df_choices)
@@ -144,7 +144,7 @@ list_log$enum_similarity <- df_sil_processed
 
 # combine the checks ------------------------------------------------------
 
-df_combined_log <- create_combined_log(dataset_name = "checked_dataset", list_of_log = list_log)
+df_combined_log <- create_combined_log_keep_change_type(dataset_name = "checked_dataset", list_of_log = list_log)
 
 # # add_info_to_cleaning_log()
 # add_with_info <- add_info_to_cleaning_log(list_of_log = df_combined_log,
@@ -177,7 +177,9 @@ tool_support <- df_combined_log$checked_dataset %>%
 df_prep_checked_data <- df_combined_log$checked_dataset
 df_prep_cleaning_log <- df_combined_log$cleaning_log %>%
     left_join(tool_support, by = "uuid") %>% 
-    relocate(any_of(cols_to_add_to_log), .after = uuid)
+    relocate(any_of(cols_to_add_to_log), .after = uuid) %>% 
+    relocate(any_of("change_type"), .after = question) %>% 
+    relocate(any_of(c("so_sm_choices", "issue", "check_id", "check_binding")), .after = other_text)
 
 df_prep_readme <- tibble::tribble(
     ~change_type_validation,                       ~description,
