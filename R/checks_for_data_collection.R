@@ -12,8 +12,9 @@ source("support_files/credentials.R")
 
 # read data ---------------------------------------------------------------
 
-loc_data <- "inputs/UGA2401_Adjumani_ECHO_data.xlsx"
-# df_tool_data <- readxl::read_excel(loc_data)
+loc_data <- "inputs/UGA2401_Adjumani_ECHO_data.xlsx" %>% 
+    select(-`...957`)
+
 
 # main data
 data_nms <- names(readxl::read_excel(path = loc_data, n_max = 300))
@@ -170,7 +171,7 @@ data_similartiy_sil <- df_tool_data %>%
 df_sil_data <- calculateEnumeratorSimilarity(data = data_similartiy_sil,
                                              input_df_survey = df_survey, 
                                              col_enum = "enumerator_id",
-                                             col_admin = "meta_village_name") %>% 
+                                             col_admin = "meta_division_name") %>% 
     mutate(si2= abs(si))
 
 df_sil_processed <- df_sil_data[order(df_sil_data$`si2`, decreasing = TRUE),!colnames(df_sil_data)%in%"si2"] %>%  
