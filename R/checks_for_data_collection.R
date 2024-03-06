@@ -12,14 +12,14 @@ source("support_files/credentials.R")
 
 # read data ---------------------------------------------------------------
 
-loc_data <- "inputs/UGA2401_Adjumani_ECHO_data.xlsx" %>% 
-    select(-`...957`)
+loc_data <- "inputs/UGA2401_Adjumani_ECHO_data.xlsx" 
 
 
 # main data
 data_nms <- names(readxl::read_excel(path = loc_data, n_max = 300))
 c_types <- ifelse(str_detect(string = data_nms, pattern = "_other$"), "text", "guess")
-df_tool_data <- readxl::read_excel(loc_data, col_types = c_types)
+df_tool_data <- readxl::read_excel(loc_data, col_types = c_types) %>% 
+    select(-`...957`)
 
 
 # tool
