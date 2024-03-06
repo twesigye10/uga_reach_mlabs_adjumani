@@ -179,7 +179,7 @@ df_sil_processed <- df_sil_data[order(df_sil_data$`si2`, decreasing = TRUE),!col
     mutate(i.check.uuid = "all",
            i.check.question = NA_character_,
            i.check.issue = paste("silhouette flag"),
-           i.check.description = paste("Potential similar responses for enumerator. si: ",si)) %>% 
+           i.check.description = glue::glue("Potential similar responses for enumerator:{enumerator_id}. si: {si}")) %>% 
     batch_select_rename()
 
 # add other checks to the list
@@ -224,7 +224,10 @@ df_prep_cleaning_log <- df_combined_log$cleaning_log %>%
     add_qn_label_to_cl(input_cl_name_col = "question",
                        input_tool = df_survey, 
                        input_tool_name_col = "name", 
-                       input_tool_label_col = "label")
+                       input_tool_label_col = "label") %>% 
+    mutate(enumerator_id = ifelse(issue %in% c("silhouette flag"), 
+                                  str_replace(string = str_extract(string = description, pattern = "enumerator:[0-9]{1,3}"), pattern = "enumerator:", ""),
+                                  enumerator_id))
 
 df_prep_readme <- tibble::tribble(
     ~change_type_validation,                       ~description,
