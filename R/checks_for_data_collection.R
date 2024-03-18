@@ -163,7 +163,9 @@ list_log$greater_thresh_distance <- df_greater_thresh_distance
 
 omit_cols_sil <- c("start", "end", "today", "duration", "duration_minutes",
                    "deviceid", "audit", "audit_URL", "instance_name", "end_survey",
-                   "geopoint", "_geopoint_latitude", "_geopoint_altitude", "_geopoint_precision", "_id" ,"_submission_time","_validation_status","_notes","_status","_submitted_by","_tags","_index")
+                   "geopoint", "_geopoint_latitude", "_geopoint_altitude", "_geopoint_precision", 
+                   "_id" ,"_submission_time","_validation_status","_notes","_status","_submitted_by","_tags","_index",
+                   "meta_village_name")
 
 data_similartiy_sil <- df_tool_data %>% 
     select(- any_of(omit_cols_sil), - matches("_note$|^note_"))
@@ -179,7 +181,7 @@ df_sil_processed <- df_sil_data[order(df_sil_data$`si2`, decreasing = TRUE),!col
     mutate(i.check.uuid = "all",
            i.check.question = NA_character_,
            i.check.issue = paste("silhouette flag"),
-           i.check.description = glue::glue("Potential similar responses for enumerator:{enumerator_id}. si: {si}")) %>% 
+           i.check.description = glue::glue("Potential similar responses for enumerator:{enumerator_id}, location:{meta_division_name}. si: {si}")) %>% 
     batch_select_rename()
 
 # add other checks to the list
@@ -276,5 +278,5 @@ freezePane(wb = wb_log, "readme", firstActiveRow = 2, firstActiveCol = 2)
 
 # openXL(wb_log)
 
-saveWorkbook(wb_log, paste0("outputs/", butteR::date_file_prefix(),"_combined_checks_echo_adjumani_test.xlsx"), overwrite = TRUE)
-openXL(file = paste0("outputs/", butteR::date_file_prefix(),"_combined_checks_echo_adjumani_test.xlsx"))
+saveWorkbook(wb_log, paste0("outputs/", butteR::date_file_prefix(),"_combined_checks_echo_adjumani.xlsx"), overwrite = TRUE)
+openXL(file = paste0("outputs/", butteR::date_file_prefix(),"_combined_checks_echo_adjumani.xlsx"))
