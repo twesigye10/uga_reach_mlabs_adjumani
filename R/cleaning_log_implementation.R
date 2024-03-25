@@ -8,6 +8,11 @@ loc_data <- "inputs/UGA2401_Adjumani_ECHO_data.xlsx"
 df_tool_data <- readxl::read_excel(loc_data) %>% 
     select(-`...957`)
 
+# tool
+loc_tool <- "inputs/UGA2401_Adjumani_ECHO_tool.xlsx"
+df_survey <- readxl::read_excel(loc_tool, sheet = "survey")
+df_choices <- readxl::read_excel(loc_tool, sheet = "choices")
+
 # check pii ---------------------------------------------------------------
 pii_from_data <- cleaningtools::check_pii(dataset = df_tool_data, element_name = "checked_dataset", uuid_column = "_uuid")
 pii_from_data$potential_PII
