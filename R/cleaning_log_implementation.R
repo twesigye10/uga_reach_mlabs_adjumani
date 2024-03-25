@@ -26,7 +26,8 @@ cols_to_remove <- c("audit", "audit_URL", "pt_num_msg", "pt_num_validation_messa
 # create a clean data -----------------------------------------------------
 
 df_filled_cl <- readxl::read_excel("inputs/main_combined_checks_echo_adjumani.xlsx", sheet = "cleaning_log") %>% 
-    filter(!is.na(reviewed), !question %in% c("_index"), !uuid %in% c("all"))
+    filter(!is.na(reviewed), !question %in% c("_index"), !uuid %in% c("all")) %>% 
+    filter(!str_detect(string = question, pattern = "\\/"))
 
 # check the cleaning log
 df_cl_review <- cleaningtools::review_cleaning_log(

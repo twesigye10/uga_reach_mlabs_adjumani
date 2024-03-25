@@ -332,12 +332,12 @@ df_cl_log %>%
 <!--       Issue :  <strong>%s</strong><br/> -->
 <!--       Enumerator ID :  <strong>%s</strong>", -->
 <!--   int.status, point_number, issue, enumerator_id -->
-<!-- ) %>%  -->
+<!-- ) %>% -->
 <!--   lapply(htmltools::HTML) -->
 
-<!-- df_cl_log %>%  -->
-<!--   filter(change_type == "remove_survey", change_type != "no_action") %>%  -->
-<!--   group_by(uuid, status, meta_division_name, meta_village_name, latitude, longitude) %>%  -->
+<!-- df_cl_log %>% -->
+<!--   filter(change_type == "remove_survey", change_type != "no_action") %>% -->
+<!--   group_by(uuid, status, meta_division_name, meta_village_name, latitude, longitude) %>% -->
 <!--   summarise(today = paste(today, collapse = " : "), -->
 <!--             enumerator_id = paste(enumerator_id, collapse = " : "), -->
 <!--             meta_division_name = paste(meta_division_name, collapse = " : "), -->
@@ -347,11 +347,11 @@ df_cl_log %>%
 <!--             old_value = paste(old_value, collapse = " : "), -->
 <!--             new_value = paste(new_value, collapse = " : "), -->
 <!--             issue = paste(issue, collapse = " : ") -->
-<!--   ) %>%  -->
-<!--   unique() %>%  -->
-<!--   mutate(int.status = ifelse(status == "refugee",  -->
-<!--                              glue("{status}_{meta_village_name}"), glue("{status}_{meta_division_name}"))) %>%  -->
-<!--   leaflet() %>%  -->
+<!--   ) %>% -->
+<!--   unique() %>% -->
+<!--   mutate(int.status = ifelse(status == "refugee", -->
+<!--                              glue("{status}_{meta_village_name}"), glue("{status}_{meta_division_name}"))) %>% -->
+<!--   leaflet() %>% -->
 <!--   addTiles() %>% -->
 <!--   addCircleMarkers(~longitude, -->
 <!--                    ~latitude, -->
