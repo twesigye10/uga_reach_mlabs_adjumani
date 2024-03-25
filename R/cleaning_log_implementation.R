@@ -41,7 +41,7 @@ df_grouped_choices<- df_choices %>%
 # get new name and choice pairs to add to the choices sheet
 new_vars_sm <- df_filled_cl %>%
     filter(str_detect(string = question, pattern = "\\w+\\/+\\w+")) %>%
-    filter(!str_detect(string = question, pattern = "other$")) %>%
+    filter(!str_detect(string = question, pattern = "other$"), change_type %in% c("change_response")) %>%
     mutate(int.new_value = str_replace_all(string = question, pattern = "\\w+\\/", replacement = ""),
            int.question = str_replace_all(string = question, pattern = "\\/+\\w+", replacement = "")) %>% 
     left_join(df_survey, by = c("int.question" = "name")) %>%
