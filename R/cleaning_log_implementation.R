@@ -96,11 +96,16 @@ df_cl_review <- cleaningtools::review_cleaning_log(
     cleaning_log_new_value_column = "new_value"
 )
 
+# filter log for cleaning
+df_final_cleaning_log <- df_filled_cl %>% 
+    filter(!question %in% c("duration_audit_sum_all_ms", "duration_audit_sum_all_minutes"), !uuid %in% c("all")) %>% 
+filter(!str_detect(string = question, pattern = "\\w+\\/$"))
+
 # create the clean data from the raw data and cleaning log
 df_cleaning_data <- cleaningtools::create_clean_data(
     raw_dataset = df_data_with_added_cols %>% select(-any_of(cols_to_remove)),
     raw_data_uuid_column = "_uuid",
-    cleaning_log = df_filled_cl %>% filter(!question %in% c("duration_audit_sum_all_ms", "duration_audit_sum_all_minutes"), !uuid %in% c("all")),
+    cleaning_log = df_final_cleaning_log,
     cleaning_log_change_type_column = "change_type",
     change_response_value = "change_response",
     NA_response_value = "blank_response",
