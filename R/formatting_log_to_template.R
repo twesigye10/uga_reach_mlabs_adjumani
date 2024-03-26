@@ -26,7 +26,8 @@ loc_data <- "inputs/UGA2401_Adjumani_ECHO_data.xlsx"
 data_nms <- names(readxl::read_excel(path = loc_data, n_max = 2000))
 c_types <- ifelse(str_detect(string = data_nms, pattern = "_other$"), "text", "guess")
 
-df_raw_data <- readxl::read_excel(path = loc_data, col_types = c_types)
+df_raw_data <- readxl::read_excel(path = loc_data, col_types = c_types) %>% 
+    select(-`...957`)
 
 # import clean data
 clean_data_path <- "inputs/UGA2401_echo_adjumani_cleaned_data.xlsx"
