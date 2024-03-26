@@ -116,12 +116,38 @@ df_cleaning_step <- cleaningtools::create_clean_data(
     cleaning_log_new_value_column = "new_value"
 )
 
-df_cleaning_data <- cleaningtools::recreate_parent_column(dataset = df_cleaning_step,
-                                                          uuid_column = "_uuid",
-                                                          kobo_survey = df_survey,
-                                                          kobo_choices = df_choices,
-                                                          sm_separator = "/",
-                                                          cleaning_log_to_append = df_final_cleaning_log)
+# handle parent question columns ------------------------------------------
 
-openxlsx::write.xlsx(df_cleaning_data, paste0("outputs/", butteR::date_file_prefix(), 
+# parent column names
+sm_parent_cols <- df_cleaning_step %>% 
+    select(contains("/")) %>% 
+    colnames() %>% 
+    str_replace_all(pattern = "’", replacement = "") %>% 
+    str_replace_all(pattern = "\\/+\\w+", replacement = "") %>% 
+    unique()
+
+df_handle_parent_qn_data <- df_cleaning_step
+
+for (cur_parent_sm_col in sm_parent_cols) {
+    # test
+    print(cur_parent_sm_col)
+    
+    df_updated_parent_qn_data <- df_handle_parent_qn_data %>% 
+        mutate(across(.cols = contains(paste0(cur_parent_sm_col, "/")), 
+                      .fns = ~ifelse(!is.na(!!sym(cur_parent_sm_col)) & .x == 1, 
+                                     str_replace_all(string = cur_column(), pattern = paste0(cur_parent_sm_col, "/"), replacement = ""), 
+                                     NA_character_),
+                      .names = "int.{.col}")
+        ) %>% 
+        unite(!!paste0("int.", cur_parent_sm_col), starts_with(glue::glue("int.{cur_parent_sm_col}/")), remove = FALSE, na.rm = TRUE, sep = " ") %>%
+        mutate(!!cur_parent_sm_col := ifelse(!is.na(!!sym(cur_parent_sm_col)), !!sym(paste0("int.", cur_parent_sm_col)), !!sym(cur_parent_sm_col)))
+    
+    df_handle_parent_qn_data <- df_updated_parent_qn_data
+}
+
+df_updated_parent_cols <- df_handle_parent_qn_data
+
+# output clean dataset
+openxlsx::write.xlsx(df_updated_parent_cols %>% select(-starts_with("int."))
+                         , paste0("outputs/", butteR::date_file_prefix(), 
                                               "_UGA2401_echo_adjumani_cleaned_data.xlsx"))
