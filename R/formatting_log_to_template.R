@@ -15,7 +15,10 @@ log_c_types <- case_when(str_detect(string = log_data_nms, pattern = "sheet|new_
                          str_detect(string = log_data_nms, pattern = "index") ~ "numeric",
                          TRUE ~ "guess")
 df_cleaning_log <- readxl::read_excel(log_path, col_types = log_c_types) %>%  
-    filter(reviewed %in% c("1"))
+    filter(reviewed %in% c("1")) %>% 
+    mutate(comment = case_when(issue %in% c("Less than 25 differents options") ~ glue("num_cols_not_NA: {num_cols_not_NA}, number_different_columns: {number_different_columns}, Final comment: {comment}"), 
+                               issue %in% c("silhouette flag") ~ glue("Description: {description}, Final comment: {comment}"),
+                               TRUE ~ comment))
 
 
 # raw data
