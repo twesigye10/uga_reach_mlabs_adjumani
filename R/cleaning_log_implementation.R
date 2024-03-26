@@ -102,7 +102,7 @@ df_final_cleaning_log <- df_filled_cl %>%
 filter(!str_detect(string = question, pattern = "\\w+\\/$"))
 
 # create the clean data from the raw data and cleaning log
-df_cleaning_data <- cleaningtools::create_clean_data(
+df_cleaning_step <- cleaningtools::create_clean_data(
     raw_dataset = df_data_with_added_cols %>% select(-any_of(cols_to_remove)),
     raw_data_uuid_column = "_uuid",
     cleaning_log = df_final_cleaning_log,
@@ -115,6 +115,13 @@ df_cleaning_data <- cleaningtools::create_clean_data(
     cleaning_log_uuid_column = "uuid",
     cleaning_log_new_value_column = "new_value"
 )
+
+df_cleaning_data <- cleaningtools::recreate_parent_column(dataset = df_cleaning_step,
+                                                          uuid_column = "_uuid",
+                                                          kobo_survey = df_survey,
+                                                          kobo_choices = df_choices,
+                                                          sm_separator = "/",
+                                                          cleaning_log_to_append = df_final_cleaning_log)
 
 openxlsx::write.xlsx(df_cleaning_data, paste0("outputs/", butteR::date_file_prefix(), 
                                               "_UGA2401_echo_adjumani_cleaned_data.xlsx"))
