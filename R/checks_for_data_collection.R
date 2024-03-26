@@ -107,6 +107,24 @@ df_other_checks <- cts_other_specify(input_tool_data = df_tool_data %>% select(-
 # add other checks to the list
 list_log$other_log <- df_other_checks
 
+# other_expenditure_other_checks
+df_other_expenditure_check <- df_tool_data %>% 
+    filter(!is.na(other_expenditure_other)) %>% 
+    mutate(i.check.uuid = `_uuid`,
+           i.check.change_type = "change_response",
+           i.check.question = "other_expenditure_other",
+           i.check.old_value = as.character(other_expenditure_other),
+           i.check.new_value = "NA",
+           i.check.issue = "recode other",
+           i.check.description = "",
+           i.check.other_text = "",
+           i.check.comment = "",
+           i.check.reviewed = "",
+           i.check.so_sm_choices = "") %>% 
+    batch_select_rename()
+list_log$other_expenditure_other_log <- df_other_expenditure_check
+
+
 
 # check duplicate uuids ---------------------------------------------------
 
