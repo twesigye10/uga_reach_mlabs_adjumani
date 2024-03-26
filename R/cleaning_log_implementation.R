@@ -140,7 +140,8 @@ for (cur_parent_sm_col in sm_parent_cols) {
                       .names = "int.{.col}")
         ) %>% 
         unite(!!paste0("int.", cur_parent_sm_col), starts_with(glue::glue("int.{cur_parent_sm_col}/")), remove = FALSE, na.rm = TRUE, sep = " ") %>%
-        mutate(!!cur_parent_sm_col := ifelse(!is.na(!!sym(cur_parent_sm_col)), !!sym(paste0("int.", cur_parent_sm_col)), !!sym(cur_parent_sm_col)))
+        mutate(!!paste0("check.old.", cur_parent_sm_col) := !!sym(cur_parent_sm_col),
+               !!cur_parent_sm_col := ifelse(!is.na(!!sym(cur_parent_sm_col)), !!sym(paste0("int.", cur_parent_sm_col)), !!sym(cur_parent_sm_col)))
     
     df_handle_parent_qn_data <- df_updated_parent_qn_data
 }
