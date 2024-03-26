@@ -117,4 +117,4 @@ df_cleaning_data <- cleaningtools::create_clean_data(
 )
 
 openxlsx::write.xlsx(df_cleaning_data, paste0("outputs/", butteR::date_file_prefix(), 
-                                              "_cleaning_data_echo_adjumani.xlsx"))
+                                              "_UGA2401_echo_adjumani_cleaned_data.xlsx"))
