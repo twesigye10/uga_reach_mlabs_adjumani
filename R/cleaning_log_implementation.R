@@ -151,3 +151,32 @@ df_updated_parent_cols <- df_handle_parent_qn_data
 openxlsx::write.xlsx(df_updated_parent_cols %>% select(-starts_with("int."))
                          , paste0("outputs/", butteR::date_file_prefix(), 
                                               "_UGA2401_echo_adjumani_cleaned_data.xlsx"))
+
+
+# extra log for recreated select multiple ---------------------------------
+
+df_log_parent_sm_cols_changes <- purrr::map_dfr(.x = sm_parent_cols, 
+                                                .f = ~ {df_updated_parent_cols %>% 
+                                                        dplyr::filter(!!sym(paste0("check.old.",.x)) != !!sym(.x)) %>% 
+                                                        dplyr::mutate(i.check.uuid = `_uuid`,
+                                                                      i.check.enumerator_id = enumerator_id,
+                                                                      i.check.point_number = point_number,
+                                                                      i.check.today = today,
+                                                                      i.check.meta_village_name = meta_village_name,
+                                                                      i.check.change_type = "change_response",
+                                                                      i.check.question = .x,
+                                                                      i.check.old_value = as.character(!!sym(paste0("check.old.",.x))),
+                                                                      i.check.new_value = as.character(!!sym(.x)),
+                                                                      i.check.issue = "changed parent sm column",
+                                                                      i.check.description = "Parent column changed to match children columns",
+                                                                      i.check.other_text = "",
+                                                                      i.check.comment = "",
+                                                                      i.check.reviewed = "1",
+                                                                      i.check.so_sm_choices = "") %>%
+                                                        dplyr::select(starts_with("i.check."))}) %>% 
+    supporteR::batch_select_rename()
+
+
+openxlsx::write.xlsx(df_log_parent_sm_cols_changes, 
+                     paste0("outputs/", butteR::date_file_prefix(), 
+                              "_extra_sm_parent_changes_checks_echo_adjumani.xlsx"))
