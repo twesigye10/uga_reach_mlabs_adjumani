@@ -31,9 +31,9 @@ df_raw_data <- readxl::read_excel(path = loc_data, col_types = c_types) %>%
 
 # import clean data
 clean_data_path <- "inputs/UGA2401_echo_adjumani_cleaned_data.xlsx"
-clean_data_nms <- names(readxl::read_excel(path = clean_data_path, n_max = 2000, sheet = "cleaned_data"))
+clean_data_nms <- names(readxl::read_excel(path = clean_data_path, n_max = 2000))
 clean_c_types <- ifelse(str_detect(string = clean_data_nms, pattern = "_other$"), "text", "guess")
-df_main_clean_data <- readxl::read_excel(path = clean_data_path, sheet = "cleaned_data", col_types = clean_c_types, na = "NA") 
+df_main_clean_data <- readxl::read_excel(path = clean_data_path, col_types = clean_c_types, na = "NA") 
 
 # tool
 loc_tool <- "inputs/UGA2401_Adjumani_ECHO_tool.xlsx"
@@ -103,40 +103,22 @@ df_changes_by_enum_issue <- df_cleaning_log_updated %>%
     group_by(enumerator_id, issue) %>%  
     summarise(Number = n())
 # Number of deletions by enumerators
-df_deletion_by_enum <- df_cleaning_log_updated %>%  
-    filter(change_type %in% c("remove_survey")) %>%  
+df_deletion_by_enum <- df_deletion_log %>%  
     group_by(uuid) %>%  
     filter(row_number() == 1) %>%  
     ungroup() %>%  
+    mutate(enumerator_id = `enumerator ID`) %>% 
     group_by(enumerator_id) %>%  
     summarise(Number = n())
 # Number of deletions due to time by enumerator
-df_deletion_by_enum_time <- df_cleaning_log_updated %>%  
-    filter(change_type %in% c("remove_survey")) %>%  
-    filter(issue %in% c("Duration is lower or higher than the thresholds")) %>%  
+df_deletion_by_enum_time <- df_deletion_log %>%  
+    filter(Issue %in% c("Duration is lower or higher than the thresholds")) %>%  
     group_by(uuid) %>%  
     filter(row_number() == 1) %>%  
-    ungroup() %>%  
+    ungroup() %>% 
+    mutate(enumerator_id = `enumerator ID`) %>%
     group_by(enumerator_id) %>%  
     summarise(Number = n())
-
-
-# export sheets -----------------------------------------------------------
-
-# 
-# openxlsx::write.xlsx(x = list(Summary = df_variable_summary,
-#                              data_extract = df_data_extract,
-#                              # Log_book = df_formatted_log,
-#                              deletion_log = df_deletion_log,
-#                              surveys_by_enum = df_surveys_by_enum,
-#                              changes_by_enum = df_changes_by_enum,
-#                              changes_by_issue = df_changes_by_enum_issue,
-#                              del_by_enum = df_deletion_by_enum,
-#                              del_by_enum_time = df_deletion_by_enum_time),
-#                     file = paste0("outputs/", butteR::date_file_prefix(), "_eth_msha_data_cleaning_logbook_for_formatting.xlsx"))
-
-## exporting log alone
-# write_csv(df_formatted_log, file = paste0("outputs/", butteR::date_file_prefix(), "_log_book.csv", na = ""))
 
  
 # format the logbook and export -------------------------------------------
@@ -146,12 +128,11 @@ df_variable_tracker <- tibble::tribble(
                                     "audit", "Removed",    "Blanked columns related to the survey and PII",
                                 "audit_URL", "Removed",    "Blanked columns related to the survey and PII",
                             "instance_name", "Removed",    "Blanked columns related to the survey and PII",
-                                "enum_name", "Removed",    "Blanked columns related to the survey and PII",
-                                      "gps", "Removed",    "Blanked columns related to the survey and PII",
-                            "_gps_latitude", "Removed",    "Blanked columns related to the survey and PII",
-                           "_gps_longitude", "Removed",    "Blanked columns related to the survey and PII",
-                            "_gps_altitude", "Removed",    "Blanked columns related to the survey and PII",
-                           "_gps_precision", "Removed",    "Blanked columns related to the survey and PII")
+                            "geopoint", "Removed",    "Blanked columns related to the survey and PII",
+                            "_geopoint_latitude", "Removed",    "Blanked columns related to the survey and PII",
+                           "_geopoint_longitude", "Removed",    "Blanked columns related to the survey and PII",
+                            "_geopoint_altitude", "Removed",    "Blanked columns related to the survey and PII",
+                           "_geopoint_precision", "Removed",    "Blanked columns related to the survey and PII")
 
 
 # create workbook ---------------------------------------------------------
