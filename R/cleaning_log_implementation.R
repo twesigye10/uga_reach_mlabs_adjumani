@@ -149,7 +149,7 @@ for (cur_parent_sm_col in sm_parent_cols) {
 df_updated_parent_cols <- df_handle_parent_qn_data
 
 # output clean dataset
-openxlsx::write.xlsx(df_updated_parent_cols %>% select(-starts_with("int."))
+openxlsx::write.xlsx(df_updated_parent_cols %>% select(-starts_with("int."), -starts_with("check.old."))
                          , paste0("outputs/", butteR::date_file_prefix(), 
                                               "_UGA2401_echo_adjumani_cleaned_data.xlsx"))
 
