@@ -148,10 +148,13 @@ for (cur_parent_sm_col in sm_parent_cols) {
 
 df_updated_parent_cols <- df_handle_parent_qn_data
 
-# output clean dataset
-openxlsx::write.xlsx(df_updated_parent_cols %>% select(-starts_with("int."), -starts_with("check.old."))
-                         , paste0("outputs/", butteR::date_file_prefix(), 
-                                              "_UGA2401_echo_adjumani_cleaned_data.xlsx"))
+# output datasets
+
+list_of_datasets <- list("raw_data" = df_tool_data %>% select(-any_of(cols_to_remove)),
+                         "cleaned_data" = df_updated_parent_cols %>% select(-starts_with("int."), -starts_with("check.old.")))
+
+openxlsx::write.xlsx(list_of_datasets, 
+                     paste0("outputs/", butteR::date_file_prefix(), "_UGA2401_echo_adjumani_cleaned_data.xlsx"))
 
 
 # extra log for recreated select multiple ---------------------------------
