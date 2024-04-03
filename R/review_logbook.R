@@ -31,7 +31,7 @@ compared_df <- cleaningtools::review_cleaning(
     raw_dataset = df_raw_data,
     raw_dataset_uuid_column = "_uuid",
     clean_dataset = df_main_clean_data,
-    clean_dataset_uuid_column = "uuid",
+    clean_dataset_uuid_column = "_uuid",
     cleaning_log = df_cleaning_logbook,
     cleaning_log_uuid_column = "uuid",
     cleaning_log_change_type_column = "changed",
