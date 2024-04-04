@@ -14,12 +14,21 @@ log_data_nms <- names(readxl::read_excel(path = log_path, n_max = 2000))
 log_c_types <- case_when(str_detect(string = log_data_nms, pattern = "sheet|new_value|other_text|enumerator_id") ~ "text",
                          str_detect(string = log_data_nms, pattern = "index") ~ "numeric",
                          TRUE ~ "guess")
-df_cleaning_log <- readxl::read_excel(log_path, col_types = log_c_types) %>%  
+df_cleaning_log_data <- readxl::read_excel(log_path, col_types = log_c_types) %>%  
     filter(reviewed %in% c("1")) %>% 
     mutate(comment = case_when(issue %in% c("Less than 25 differents options") ~ glue("num_cols_not_NA: {num_cols_not_NA}, number_different_columns: {number_different_columns}, Final comment: {comment}"), 
                                issue %in% c("silhouette flag") ~ glue("Description: {description}, Final comment: {comment}"),
                                TRUE ~ comment))
+log_path_sm_parents <- "inputs/extra_sm_parent_changes_checks_echo_adjumani.xlsx"
+log_data_nms_sm_parents <- names(readxl::read_excel(path = log_path_sm_parents, n_max = 2000))
+log_c_types_sm_parents <- case_when(str_detect(string = log_data_nms_sm_parents, pattern = "sheet|new_value|other_text|enumerator_id") ~ "text",
+                                    str_detect(string = log_data_nms_sm_parents, pattern = "index|reviewed") ~ "numeric",
+                                    str_detect(string = log_data_nms_sm_parents, pattern = "today") ~ "date",
+                                    TRUE ~ "guess")
+df_cleaning_log_sm_parents <- readxl::read_excel(log_path_sm_parents, col_types = log_c_types_sm_parents) %>%  
+    filter(reviewed %in% c("1"))
 
+df_cleaning_log <- bind_rows(df_cleaning_log_data, df_cleaning_log_sm_parents)
 
 # raw data
 loc_data <- "inputs/UGA2401_Adjumani_ECHO_data.xlsx"
