@@ -133,15 +133,25 @@ for (cur_parent_sm_col in sm_parent_cols) {
     print(cur_parent_sm_col)
     
     df_updated_parent_qn_data <- df_handle_parent_qn_data %>% 
-        mutate(across(.cols = contains(paste0(cur_parent_sm_col, "/")), 
-                      .fns = ~ifelse(!is.na(!!sym(cur_parent_sm_col)) & .x == 1, 
+        mutate(across(.cols = starts_with(paste0(cur_parent_sm_col, "/")), 
+                      .fns = ~ifelse(.x == 1 & !str_detect(string = !!sym(cur_parent_sm_col), pattern = str_replace_all(string = cur_column(), pattern = paste0(cur_parent_sm_col, "/"), replacement = "")), 
                                      str_replace_all(string = cur_column(), pattern = paste0(cur_parent_sm_col, "/"), replacement = ""), 
                                      NA_character_),
-                      .names = "int.{.col}")
+                      .names = "check.extra.{.col}"),
+               across(.cols = starts_with(paste0(cur_parent_sm_col, "/")), 
+                      .fns = ~ifelse(.x == 0 & str_detect(string = !!sym(cur_parent_sm_col), pattern = str_replace_all(string = cur_column(), pattern = paste0(cur_parent_sm_col, "/"), replacement = "")), 
+                                     str_replace_all(string = cur_column(), pattern = paste0(cur_parent_sm_col, "/"), replacement = ""), 
+                                     NA_character_),
+                      .names = "check.removed.{.col}")
         ) %>% 
-        unite(!!paste0("int.", cur_parent_sm_col), starts_with(glue::glue("int.{cur_parent_sm_col}/")), remove = FALSE, na.rm = TRUE, sep = " ") %>%
+        unite(!!paste0("check.extra.", cur_parent_sm_col), starts_with(glue::glue("check.extra.{cur_parent_sm_col}/")), remove = TRUE, na.rm = TRUE, sep = " ") %>%
+        unite(!!paste0("check.removed.", cur_parent_sm_col), starts_with(glue::glue("check.removed.{cur_parent_sm_col}/")), remove = TRUE, na.rm = TRUE, sep = " ") %>%
         mutate(!!paste0("check.old.", cur_parent_sm_col) := !!sym(cur_parent_sm_col),
-               !!cur_parent_sm_col := ifelse(!is.na(!!sym(cur_parent_sm_col)), !!sym(paste0("int.", cur_parent_sm_col)), !!sym(cur_parent_sm_col)))
+               !!paste0("check.reg.", cur_parent_sm_col) := ifelse(!is.na(!!sym(paste0("check.removed.", cur_parent_sm_col))), str_replace_all(string = !!sym(paste0("check.removed.", cur_parent_sm_col)), pattern = " ", replacement = "\\s?|"), NA_character_)) %>% 
+        mutate(!!paste0("check.remaining.", cur_parent_sm_col) := ifelse(!(is.na(!!sym(paste0("check.reg.", cur_parent_sm_col))) | !!sym(paste0("check.reg.", cur_parent_sm_col)) %in% c("NA", "")), str_remove_all(string = !!sym(cur_parent_sm_col), pattern = !!sym(paste0("check.reg.", cur_parent_sm_col))), !!sym(cur_parent_sm_col))) %>% 
+        unite(!!paste0("check.final.", cur_parent_sm_col), matches(paste0("check.remaining.", cur_parent_sm_col, "$|","check.extra.", cur_parent_sm_col, "$")), remove = FALSE, na.rm = TRUE, sep = " ") %>% 
+        mutate(!!paste0("check.final.", cur_parent_sm_col) := str_trim(!!sym(paste0("check.final.", cur_parent_sm_col))),
+               !!cur_parent_sm_col := !!sym(paste0("check.final.", cur_parent_sm_col)))
     
     df_handle_parent_qn_data <- df_updated_parent_qn_data
 }
@@ -151,7 +161,8 @@ df_updated_parent_cols <- df_handle_parent_qn_data
 # output datasets
 
 list_of_datasets <- list("raw_data" = df_tool_data %>% select(-any_of(cols_to_remove)),
-                         "cleaned_data" = df_updated_parent_cols %>% select(-starts_with("int."), -starts_with("check.old.")))
+                         "cleaned_data" = df_updated_parent_cols %>% select(-matches("^int.|^check."))
+                         )
 
 openxlsx::write.xlsx(list_of_datasets, 
                      paste0("outputs/", butteR::date_file_prefix(), "_UGA2401_echo_adjumani_cleaned_data.xlsx"))
