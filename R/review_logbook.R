@@ -14,9 +14,9 @@ df_raw_data <- readxl::read_excel(path = loc_data, col_types = c_types) %>%
 
 # import clean data
 clean_data_path <- "inputs/UGA2401_echo_adjumani_cleaned_data.xlsx"
-clean_data_nms <- names(readxl::read_excel(path = clean_data_path, n_max = 2000))
+clean_data_nms <- names(readxl::read_excel(path = clean_data_path, n_max = 2000, sheet = "cleaned_data"))
 clean_c_types <- ifelse(str_detect(string = clean_data_nms, pattern = "_other$"), "text", "guess")
-df_main_clean_data <- readxl::read_excel(path = clean_data_path, col_types = clean_c_types, na = "NA") 
+df_main_clean_data <- readxl::read_excel(path = clean_data_path, col_types = clean_c_types, na = "NA", sheet = "cleaned_data") 
 
 # tool
 loc_tool <- "inputs/UGA2401_Adjumani_ECHO_tool.xlsx"
