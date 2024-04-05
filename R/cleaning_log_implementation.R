@@ -2,6 +2,7 @@ library(tidyverse)
 library(glue)
 library(cleaningtools)
 library(httr)
+library(supporteR)
 
 source("R/support_functions.R")
 
