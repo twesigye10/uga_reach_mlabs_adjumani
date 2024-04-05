@@ -4,8 +4,6 @@ library(cleaningtools)
 library(httr)
 library(supporteR)
 
-source("R/support_functions.R")
-
 loc_data <- "inputs/UGA2401_Adjumani_ECHO_data.xlsx"
 
 df_tool_data <- readxl::read_excel(loc_data) %>% 
