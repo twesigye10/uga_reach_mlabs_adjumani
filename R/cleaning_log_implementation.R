@@ -37,6 +37,7 @@ cols_to_remove <- c("audit", "audit_URL", "pt_num_msg", "pt_num_validation_messa
 
 df_data_with_added_cols <- cts_add_new_sm_choices_to_data(input_df_tool_data = df_tool_data,
                                                           input_df_filled_cl = df_filled_cl, 
+                                                          input_df_survey = df_survey,
                                                           input_df_choices = df_choices)
 
 # create a clean data -----------------------------------------------------
