@@ -77,50 +77,12 @@ df_cleaning_step <- cleaningtools::create_clean_data(
 
 # handle parent question columns ------------------------------------------
 
-# parent column names
-sm_parent_cols <- df_cleaning_step %>% 
-    select(contains("/")) %>% 
-    colnames() %>% 
-    str_replace_all(pattern = "’", replacement = "") %>% 
-    str_replace_all(pattern = "\\/+\\w+", replacement = "") %>% 
-    unique()
-
-df_handle_parent_qn_data <- df_cleaning_step
-
-for (cur_parent_sm_col in sm_parent_cols) {
-    # test
-    print(cur_parent_sm_col)
-    
-    df_updated_parent_qn_data <- df_handle_parent_qn_data %>% 
-        mutate(across(.cols = starts_with(paste0(cur_parent_sm_col, "/")), 
-                      .fns = ~ifelse(.x == 1 & !str_detect(string = !!sym(cur_parent_sm_col), pattern = str_replace_all(string = cur_column(), pattern = paste0(cur_parent_sm_col, "/"), replacement = "")), 
-                                     str_replace_all(string = cur_column(), pattern = paste0(cur_parent_sm_col, "/"), replacement = ""), 
-                                     NA_character_),
-                      .names = "check.extra.{.col}"),
-               across(.cols = starts_with(paste0(cur_parent_sm_col, "/")), 
-                      .fns = ~ifelse(.x == 0 & str_detect(string = !!sym(cur_parent_sm_col), pattern = str_replace_all(string = cur_column(), pattern = paste0(cur_parent_sm_col, "/"), replacement = "")), 
-                                     str_replace_all(string = cur_column(), pattern = paste0(cur_parent_sm_col, "/"), replacement = ""), 
-                                     NA_character_),
-                      .names = "check.removed.{.col}")
-        ) %>% 
-        unite(!!paste0("check.extra.", cur_parent_sm_col), starts_with(glue::glue("check.extra.{cur_parent_sm_col}/")), remove = TRUE, na.rm = TRUE, sep = " ") %>%
-        unite(!!paste0("check.removed.", cur_parent_sm_col), starts_with(glue::glue("check.removed.{cur_parent_sm_col}/")), remove = TRUE, na.rm = TRUE, sep = " ") %>%
-        mutate(!!paste0("check.old.", cur_parent_sm_col) := !!sym(cur_parent_sm_col),
-               !!paste0("check.reg.", cur_parent_sm_col) := ifelse(!is.na(!!sym(paste0("check.removed.", cur_parent_sm_col))), str_replace_all(string = !!sym(paste0("check.removed.", cur_parent_sm_col)), pattern = " ", replacement = "\\s?|"), NA_character_)) %>% 
-        mutate(!!paste0("check.remaining.", cur_parent_sm_col) := ifelse(!(is.na(!!sym(paste0("check.reg.", cur_parent_sm_col))) | !!sym(paste0("check.reg.", cur_parent_sm_col)) %in% c("NA", "")), str_remove_all(string = !!sym(cur_parent_sm_col), pattern = !!sym(paste0("check.reg.", cur_parent_sm_col))), !!sym(cur_parent_sm_col))) %>% 
-        unite(!!paste0("check.final.", cur_parent_sm_col), matches(paste0("check.remaining.", cur_parent_sm_col, "$|","check.extra.", cur_parent_sm_col, "$")), remove = FALSE, na.rm = TRUE, sep = " ") %>% 
-        mutate(!!paste0("check.final.", cur_parent_sm_col) := str_trim(!!sym(paste0("check.final.", cur_parent_sm_col))),
-               !!cur_parent_sm_col := !!sym(paste0("check.final.", cur_parent_sm_col)))
-    
-    df_handle_parent_qn_data <- df_updated_parent_qn_data
-}
-
-df_updated_parent_cols <- df_handle_parent_qn_data
+df_updating_sm_parents <- cts_update_sm_parent_cols(input_df_cleaning_step_data = df_cleaning_step)
 
 # output datasets
 
 list_of_datasets <- list("raw_data" = df_tool_data %>% select(-any_of(cols_to_remove)),
-                         "cleaned_data" = df_updated_parent_cols %>% select(-matches("^int.|^check."))
+                         "cleaned_data" = df_updating_sm_parents$updated_sm_parents
                          )
 
 openxlsx::write.xlsx(list_of_datasets, 
@@ -129,28 +91,7 @@ openxlsx::write.xlsx(list_of_datasets,
 
 # extra log for recreated select multiple ---------------------------------
 
-df_log_parent_sm_cols_changes <- purrr::map_dfr(.x = sm_parent_cols, 
-                                                .f = ~ {df_updated_parent_cols %>% 
-                                                        dplyr::filter(!!sym(paste0("check.old.",.x)) != !!sym(.x)) %>% 
-                                                        dplyr::mutate(i.check.uuid = `_uuid`,
-                                                                      i.check.enumerator_id = enumerator_id,
-                                                                      i.check.point_number = point_number,
-                                                                      i.check.today = today,
-                                                                      i.check.meta_village_name = meta_village_name,
-                                                                      i.check.change_type = "change_response",
-                                                                      i.check.question = .x,
-                                                                      i.check.old_value = as.character(!!sym(paste0("check.old.",.x))),
-                                                                      i.check.new_value = as.character(!!sym(.x)),
-                                                                      i.check.issue = "changed parent sm column",
-                                                                      i.check.description = "Parent column changed to match children columns",
-                                                                      i.check.other_text = "",
-                                                                      i.check.comment = "",
-                                                                      i.check.reviewed = "1",
-                                                                      i.check.so_sm_choices = "") %>%
-                                                        dplyr::select(starts_with("i.check."))}) %>% 
-    supporteR::batch_select_rename()
-
-
-openxlsx::write.xlsx(df_log_parent_sm_cols_changes, 
+df_log_parent_sm_cols_changes <- 
+openxlsx::write.xlsx(df_updating_sm_parents$extra_log_sm_parents, 
                      paste0("outputs/", butteR::date_file_prefix(), 
                               "_extra_sm_parent_changes_checks_echo_adjumani.xlsx"))
