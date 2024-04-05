@@ -15,7 +15,6 @@ loc_tool <- "inputs/UGA2401_Adjumani_ECHO_tool.xlsx"
 df_survey <- readxl::read_excel(loc_tool, sheet = "survey")
 df_choices <- readxl::read_excel(loc_tool, sheet = "choices")
 
-
 df_filled_cl <- readxl::read_excel("inputs/main_combined_checks_echo_adjumani.xlsx", sheet = "cleaning_log") %>% 
     filter(!is.na(reviewed), !question %in% c("_index"), !uuid %in% c("all"))
 
@@ -39,8 +38,6 @@ df_data_with_added_cols <- cts_add_new_sm_choices_to_data(input_df_tool_data = d
                                                           input_df_filled_cl = df_filled_cl, 
                                                           input_df_choices = df_choices)
 
-
-
 # create a clean data -----------------------------------------------------
 
 # check the cleaning log
@@ -52,8 +49,7 @@ df_cl_review <- cleaningtools::review_cleaning_log(
     change_response_value = "change_response",
     cleaning_log_question_column = "question",
     cleaning_log_uuid_column = "uuid",
-    cleaning_log_new_value_column = "new_value"
-)
+    cleaning_log_new_value_column = "new_value")
 
 # filter log for cleaning
 df_final_cleaning_log <- df_filled_cl %>% 
@@ -72,22 +68,18 @@ df_cleaning_step <- cleaningtools::create_clean_data(
     remove_survey_value = "remove_survey",
     cleaning_log_question_column = "question",
     cleaning_log_uuid_column = "uuid",
-    cleaning_log_new_value_column = "new_value"
-)
+    cleaning_log_new_value_column = "new_value" )
 
 # handle parent question columns ------------------------------------------
 
 df_updating_sm_parents <- cts_update_sm_parent_cols(input_df_cleaning_step_data = df_cleaning_step)
 
 # output datasets
-
 list_of_datasets <- list("raw_data" = df_tool_data %>% select(-any_of(cols_to_remove)),
-                         "cleaned_data" = df_updating_sm_parents$updated_sm_parents
-                         )
+                         "cleaned_data" = df_updating_sm_parents$updated_sm_parents)
 
 openxlsx::write.xlsx(list_of_datasets, 
                      paste0("outputs/", butteR::date_file_prefix(), "_UGA2401_echo_adjumani_cleaned_data.xlsx"))
-
 
 # extra log for recreated select multiple ---------------------------------
 
