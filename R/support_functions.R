@@ -294,7 +294,7 @@ cts_add_new_sm_choices_to_data <- function(input_df_tool_data, input_df_filled_c
 cts_update_sm_parent_cols <- function(input_df_cleaning_step_data, input_sm_seperator = "/") {
     
     # check existance of sm columns
-    if(!str_detect(string = colnames(input_df_cleaning_step_data), pattern = paste0("\\",input_sm_seperator))){
+    if(!str_detect(string = paste(colnames(input_df_cleaning_step_data), collapse = " "), pattern = paste0("\\",input_sm_seperator))){
         stop("check that there are select multiple columns and the sm seperator ")
     }
     
