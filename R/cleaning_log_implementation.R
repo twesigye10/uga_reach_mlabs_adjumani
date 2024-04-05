@@ -83,7 +83,6 @@ openxlsx::write.xlsx(list_of_datasets,
 
 # extra log for recreated select multiple ---------------------------------
 
-df_log_parent_sm_cols_changes <- 
 openxlsx::write.xlsx(df_updating_sm_parents$extra_log_sm_parents, 
                      paste0("outputs/", butteR::date_file_prefix(), 
                               "_extra_sm_parent_changes_checks_echo_adjumani.xlsx"))
