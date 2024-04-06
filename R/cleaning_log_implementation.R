@@ -72,7 +72,8 @@ df_cleaning_step <- cleaningtools::create_clean_data(
 
 # handle parent question columns ------------------------------------------
 
-df_updating_sm_parents <- cts_update_sm_parent_cols(input_df_cleaning_step_data = df_cleaning_step)
+df_updating_sm_parents <- cts_update_sm_parent_cols(input_df_cleaning_step_data = df_cleaning_step,
+                                                    input_location_col = "meta_village_name")
 
 # output datasets
 list_of_datasets <- list("raw_data" = df_tool_data %>% select(-any_of(cols_to_remove)),
