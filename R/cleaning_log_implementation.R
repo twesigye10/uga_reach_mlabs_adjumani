@@ -73,6 +73,9 @@ df_cleaning_step <- cleaningtools::create_clean_data(
 # handle parent question columns ------------------------------------------
 
 df_updating_sm_parents <- cts_update_sm_parent_cols(input_df_cleaning_step_data = df_cleaning_step,
+                                                    input_uuid_col = "_uuid",
+                                                    input_point_id_col = "point_number",
+                                                    input_collected_date_col = "today",
                                                     input_location_col = "meta_village_name")
 
 # output datasets
