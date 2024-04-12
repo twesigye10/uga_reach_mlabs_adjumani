@@ -39,7 +39,8 @@ df_data_with_composites <- df_main_clean_data %>%
 
 # weights
 df_ref_with_weights <- analysistools::add_weights(dataset = df_data_with_composites %>% 
-                                                      filter(status %in% c("refugee")),
+                                                      filter(status %in% c("refugee")) %>% 
+                                                      mutate(strata = paste0("refugee_", meta_division_name)),
                                                   sample_data = df_ref_pop,
                                                   strata_column_dataset = "strata",
                                                   strata_column_sample = "strata",
@@ -49,7 +50,6 @@ ref_svy <- as_survey(.data = df_ref_with_weights, strata = strata, weights = wei
 df_analysis_refugee <- analysistools::create_analysis(design = ref_svy, 
                                                       loa = dap,
                                                       sm_separator = "/")
-
 
 # host analysis -----------------------------------------------------------
 
@@ -65,12 +65,13 @@ host_svy <- as_survey(.data = df_host_with_weights, strata = strata, weights = w
 
 df_analysis_host <- analysistools::create_analysis(design = host_svy, 
                                                       loa = dap,
-                                                      sm_separator = "/")
-
+                                                      sm_separator = "/") 
 
 # output analysis with out tables -----------------------------------------
 
-analysis_out_list <- list("Refugee analysis" = df_analysis_refugee,
-                                 "Host analysis" = df_analysis_host)
+analysis_out_list <- list("Refugee analysis" = df_analysis_refugee$results_table %>% 
+                              mutate(population = "refugee"),
+                          "Host analysis" = df_analysis_host$results_table %>% 
+                              mutate(population = "host_community"))
 
 openxlsx::write.xlsx(analysis_out_list, paste0("outputs/", butteR::date_file_prefix(), "_analysis_UGA2401_echo_adjumani.xlsx"))
