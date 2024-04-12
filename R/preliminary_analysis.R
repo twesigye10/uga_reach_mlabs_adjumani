@@ -25,7 +25,8 @@ df_host_pop <- read_csv("inputs/host_population_echo_adjumani.csv")
 
 # data with composites
 df_data_with_composites <- df_main_clean_data %>% 
-    create_composite_indicators() #%>% 
+    create_composite_indicators() %>% 
+    mutate(strata = paste0(status, "_", meta_division_name)) #%>% 
     # addindicators::add_lcsi(lcsi_stress_vars = c("lcsi_stress1_sold_household_assets", "lcsi_stress2_borrowed_money", "lcsi_stress3_spent_savings", "lcsi_stress4_sold_more_animals_than_usual"),
     #                         lcsi_crisis_vars = c("lcsi_crisis1_reduced_expenditure_on_health_and_education", "lcsi_crisis2_sold_productive_assets_or_means_of_transport", "lcsi_crisis3_withdrew_children_from_school"),
     #                         lcsi_emergency_vars = c("lcsi_emergency1_increase_the_number_of_family_members_searching_for_work_outside_your_village", "lcsi_emergency2_purchased_food_on_credit", "lcsi_emergency3_begged_or_relied_on_charity"),
@@ -39,8 +40,7 @@ df_data_with_composites <- df_main_clean_data %>%
 
 # weights
 df_ref_with_weights <- analysistools::add_weights(dataset = df_data_with_composites %>% 
-                                                      filter(status %in% c("refugee")) %>% 
-                                                      mutate(strata = paste0(status, "_", meta_division_name)),
+                                                      filter(status %in% c("refugee")),
                                                   sample_data = df_ref_pop,
                                                   strata_column_dataset = "strata",
                                                   strata_column_sample = "strata",
@@ -55,8 +55,7 @@ df_analysis_refugee <- analysistools::create_analysis(design = ref_svy,
 
 # weights
 df_host_with_weights <- analysistools::add_weights(dataset = df_data_with_composites %>% 
-                                                       filter(status %in% c("host_community")) %>% 
-                                                       mutate(strata = paste0(status, "_", meta_division_name)),
+                                                       filter(status %in% c("host_community")),
                                                    sample_data = df_host_pop,
                                                    strata_column_dataset = "strata",
                                                    strata_column_sample = "strata",
