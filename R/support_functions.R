@@ -220,3 +220,5 @@ create_combined_log_keep_change_type <- function(list_of_log,
     
     output
 }
+
+
