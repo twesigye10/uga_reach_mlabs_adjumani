@@ -85,7 +85,7 @@ openxlsx::write.xlsx(analysis_out_list, paste0("outputs/", butteR::date_file_pre
 df_refugee_analysis_table <- presentresults::create_table_group_x_variable(results_table = df_analysis_refugee$results_table)
 
 presentresults::create_xlsx_group_x_variable(table_group_x_variable = df_refugee_analysis_table,
-                                             file_path = "outputs/analysis_tables_UGA2401_echo_adjumani.xlsx",
+                                             file_path = "outputs/analysis_tables_UGA2401_echo_adjumani_refugee.xlsx",
                                              table_name = "refugee"
                                                 
 )
@@ -93,7 +93,7 @@ presentresults::create_xlsx_group_x_variable(table_group_x_variable = df_refugee
 df_host_analysis_table <- presentresults::create_table_group_x_variable(results_table = df_analysis_host$results_table)
 
 presentresults::create_xlsx_group_x_variable(table_group_x_variable = df_host_analysis_table,
-                                             file_path = "outputs/analysis_tables_UGA2401_echo_adjumani.xlsx",
+                                             file_path = "outputs/analysis_tables_UGA2401_echo_adjumani_host.xlsx",
                                              table_name = "host"
                                                 
 )
