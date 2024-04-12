@@ -17,7 +17,9 @@ df_survey <- readxl::read_excel(loc_tool, sheet = "survey")
 df_choices <- readxl::read_excel(loc_tool, sheet = "choices")
 
 # dap
-dap <- read_csv("inputs/r_dap_echo_adjumani.csv")
+dap <- read_csv("inputs/r_dap_echo_adjumani.csv") %>% 
+    filter(!group_var %in% c("reason_for_health_facility_choice",
+                            "hh_length_stay_adjumani_city"))
 
 # pop
 df_ref_pop <- read_csv("inputs/refugee_population_echo_adjumani.csv")
@@ -77,4 +79,22 @@ analysis_out_list <- list("Refugee analysis" = df_analysis_refugee$results_table
                               mutate(population = "host_community"))
 
 openxlsx::write.xlsx(analysis_out_list, paste0("outputs/", butteR::date_file_prefix(), "_analysis_UGA2401_echo_adjumani.xlsx"))
+
+# analysis tables ---------------------------------------------------------
+
+df_refugee_analysis_table <- presentresults::create_table_group_x_variable(results_table = df_analysis_refugee$results_table)
+
+presentresults::create_xlsx_group_x_variable(table_group_x_variable = df_refugee_analysis_table,
+                                             file_path = "outputs/analysis_tables_UGA2401_echo_adjumani.xlsx",
+                                             table_name = "refugee"
+                                                
+)
+
+df_host_analysis_table <- presentresults::create_table_group_x_variable(results_table = df_analysis_host$results_table)
+
+presentresults::create_xlsx_group_x_variable(table_group_x_variable = df_host_analysis_table,
+                                             file_path = "outputs/analysis_tables_UGA2401_echo_adjumani.xlsx",
+                                             table_name = "host"
+                                                
+)
 
