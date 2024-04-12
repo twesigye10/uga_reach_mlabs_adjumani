@@ -40,7 +40,7 @@ df_data_with_composites <- df_main_clean_data %>%
 # weights
 df_ref_with_weights <- analysistools::add_weights(dataset = df_data_with_composites %>% 
                                                       filter(status %in% c("refugee")) %>% 
-                                                      mutate(strata = paste0("refugee_", meta_division_name)),
+                                                      mutate(strata = paste0(status, "_", meta_division_name)),
                                                   sample_data = df_ref_pop,
                                                   strata_column_dataset = "strata",
                                                   strata_column_sample = "strata",
@@ -55,7 +55,8 @@ df_analysis_refugee <- analysistools::create_analysis(design = ref_svy,
 
 # weights
 df_host_with_weights <- analysistools::add_weights(dataset = df_data_with_composites %>% 
-                                                       filter(status %in% c("host_community")),
+                                                       filter(status %in% c("host_community")) %>% 
+                                                       mutate(strata = paste0(status, "_", meta_division_name)),
                                                    sample_data = df_host_pop,
                                                    strata_column_dataset = "strata",
                                                    strata_column_sample = "strata",
@@ -75,3 +76,4 @@ analysis_out_list <- list("Refugee analysis" = df_analysis_refugee$results_table
                               mutate(population = "host_community"))
 
 openxlsx::write.xlsx(analysis_out_list, paste0("outputs/", butteR::date_file_prefix(), "_analysis_UGA2401_echo_adjumani.xlsx"))
+
