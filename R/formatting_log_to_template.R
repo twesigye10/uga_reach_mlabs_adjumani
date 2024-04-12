@@ -1,5 +1,3 @@
-# read in log and data
-
 library(tidyverse)
 library(lubridate)
 library(glue)
