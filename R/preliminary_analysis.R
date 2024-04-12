@@ -3,6 +3,8 @@ library(srvyr)
 library(supporteR)
 library(analysistools)
 
+source("R/composite_indicators.R")
+
 # clean data
 clean_data_path <- "inputs/UGA2401_echo_adjumani_cleaned_data.xlsx"
 clean_data_nms <- names(readxl::read_excel(path = clean_data_path, n_max = 2000, sheet = "cleaned_data"))
@@ -23,15 +25,15 @@ df_host_pop <- read_csv("inputs/host_population_echo_adjumani.csv")
 
 # data with composites
 df_data_with_composites <- df_main_clean_data %>% 
-    create_composite_indicators() %>% 
-    addindicators::add_lcsi(lcsi_stress_vars = c("lcsi_stress1_sold_household_assets", "lcsi_stress2_borrowed_money", "lcsi_stress3_spent_savings", "lcsi_stress4_sold_more_animals_than_usual"),
-                            lcsi_crisis_vars = c("lcsi_crisis1_reduced_expenditure_on_health_and_education", "lcsi_crisis2_sold_productive_assets_or_means_of_transport", "lcsi_crisis3_withdrew_children_from_school"),
-                            lcsi_emergency_vars = c("lcsi_emergency1_increase_the_number_of_family_members_searching_for_work_outside_your_village", "lcsi_emergency2_purchased_food_on_credit", "lcsi_emergency3_begged_or_relied_on_charity"),
-                            yes_val = "yes",
-                            no_val = "no_had_no_need",
-                            exhausted_val = "no_exhausted",
-                            not_applicable_val = "not_applicable",
-                            ignore_NA = TRUE) 
+    create_composite_indicators() #%>% 
+    # addindicators::add_lcsi(lcsi_stress_vars = c("lcsi_stress1_sold_household_assets", "lcsi_stress2_borrowed_money", "lcsi_stress3_spent_savings", "lcsi_stress4_sold_more_animals_than_usual"),
+    #                         lcsi_crisis_vars = c("lcsi_crisis1_reduced_expenditure_on_health_and_education", "lcsi_crisis2_sold_productive_assets_or_means_of_transport", "lcsi_crisis3_withdrew_children_from_school"),
+    #                         lcsi_emergency_vars = c("lcsi_emergency1_increase_the_number_of_family_members_searching_for_work_outside_your_village", "lcsi_emergency2_purchased_food_on_credit", "lcsi_emergency3_begged_or_relied_on_charity"),
+    #                         yes_val = "yes",
+    #                         no_val = "no_had_no_need",
+    #                         exhausted_val = "no_exhausted",
+    #                         not_applicable_val = "not_applicable",
+    #                         ignore_NA = TRUE) 
 
 # refugee analysis --------------------------------------------------------
 
