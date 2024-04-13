@@ -69,15 +69,6 @@ df_analysis_host <- analysistools::create_analysis(design = host_svy,
                                                       loa = dap,
                                                       sm_separator = "/") 
 
-# output analysis with out tables -----------------------------------------
-
-analysis_out_list <- list("Refugee analysis" = df_analysis_refugee$results_table %>% 
-                              correct_nan_analysis_var_variable_is_na() %>% 
-                              mutate(population = "refugee"),
-                          "Host analysis" = df_analysis_host$results_table %>% 
-                              correct_nan_analysis_var_variable_is_na() %>% 
-                              mutate(population = "host_community"))
-
 # analysis tables ---------------------------------------------------------
 
 df_refugee_analysis_table <- presentresults::create_table_variable_x_group(results_table = df_analysis_refugee$results_table)
@@ -95,4 +86,3 @@ presentresults::create_xlsx_variable_x_group(table_group_x_variable = df_host_an
                                              table_sheet_name = "host"
                                              
 )
-
