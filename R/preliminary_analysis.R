@@ -78,16 +78,13 @@ analysis_out_list <- list("Refugee analysis" = df_analysis_refugee$results_table
                               correct_nan_analysis_var_variable_is_na() %>% 
                               mutate(population = "host_community"))
 
-# openxlsx::write.xlsx(analysis_out_list, paste0("outputs/", butteR::date_file_prefix(), "_analysis_UGA2401_echo_adjumani.xlsx"))
-
 # analysis tables ---------------------------------------------------------
-
 
 df_refugee_analysis_table <- presentresults::create_table_variable_x_group(results_table = df_analysis_refugee$results_table)
 
 presentresults::create_xlsx_variable_x_group(table_group_x_variable = df_refugee_analysis_table,
                                              file_path = "outputs/analysis_tables_UGA2401_echo_adjumani_refugee.xlsx",
-                                             table_name = "refugee"
+                                             table_sheet_name = "refugee"
                                              
 )
 
@@ -95,7 +92,7 @@ df_host_analysis_table <- presentresults::create_table_variable_x_group(results_
 
 presentresults::create_xlsx_variable_x_group(table_group_x_variable = df_host_analysis_table,
                                              file_path = "outputs/analysis_tables_UGA2401_echo_adjumani_host.xlsx",
-                                             table_name = "host"
+                                             table_sheet_name = "host"
                                              
 )
 
