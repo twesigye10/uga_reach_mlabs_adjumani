@@ -69,6 +69,18 @@ df_analysis_host <- analysistools::create_analysis(design = host_svy,
                                                       loa = dap,
                                                       sm_separator = "/") 
 
+
+# # output analysis with out tables -----------------------------------------
+# 
+# analysis_out_list <- list("Refugee analysis" = df_analysis_refugee$results_table %>% 
+#                               mutate(population = "refugee"),
+#                           "Host analysis" = df_analysis_host$results_table %>% 
+#                               mutate(population = "host_community"))
+# 
+# openxlsx::write.xlsx(analysis_out_list, paste0("outputs/", butteR::date_file_prefix(), "_analysis_UGA2401_echo_adjumani.xlsx"))
+
+
+
 # analysis tables ---------------------------------------------------------
 
 df_refugee_analysis_table <- presentresults::create_table_variable_x_group(results_table = df_analysis_refugee$results_table)
