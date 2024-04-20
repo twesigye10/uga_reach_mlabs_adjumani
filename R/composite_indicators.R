@@ -7,6 +7,6 @@ create_composite_indicators <- function(input_df) {
                                                  meta_respondent_age <= 24 ~ "age_21_24",
                                                  meta_respondent_age <= 59 ~ "age_25_59",
                                                  meta_respondent_age >= 60 ~ "age_greater_60"),
-               i.shelter_index = hh_members_live_adjumani_city/shelter_room_sleep_number
+               i.shelter_index = hh_members_live_adjumani_city/shelter_rooms_sleep_number
         )
 }
