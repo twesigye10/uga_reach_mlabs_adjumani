@@ -62,7 +62,7 @@ df_analysis_host <- analysistools::create_analysis(design = host_svy,
 df_refugee_analysis_table <- presentresults::create_table_variable_x_group(results_table = df_analysis_refugee$results_table)
 
 presentresults::create_xlsx_variable_x_group(table_group_x_variable = df_refugee_analysis_table,
-                                             file_path = "outputs/analysis_tables_UGA2401_echo_adjumani_refugee.xlsx",
+                                             file_path = paste0("outputs/", butteR::date_file_prefix(), "_analysis_tables_UGA2401_echo_adjumani_refugee.xlsx"),
                                              table_sheet_name = "refugee"
                                              
 )
@@ -70,7 +70,7 @@ presentresults::create_xlsx_variable_x_group(table_group_x_variable = df_refugee
 df_host_analysis_table <- presentresults::create_table_variable_x_group(results_table = df_analysis_host$results_table)
 
 presentresults::create_xlsx_variable_x_group(table_group_x_variable = df_host_analysis_table,
-                                             file_path = "outputs/analysis_tables_UGA2401_echo_adjumani_host.xlsx",
+                                             file_path = paste0("outputs/", butteR::date_file_prefix(), "_analysis_tables_UGA2401_echo_adjumani_host.xlsx"),
                                              table_sheet_name = "host"
                                              
 )
