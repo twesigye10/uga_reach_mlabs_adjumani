@@ -6,6 +6,7 @@ create_composite_indicators <- function(input_df) {
                i.meta_respondent_age = case_when(meta_respondent_age <= 20 ~ "age_18_20",
                                                  meta_respondent_age <= 24 ~ "age_21_24",
                                                  meta_respondent_age <= 59 ~ "age_25_59",
-                                                 meta_respondent_age >= 60 ~ "age_greater_60")
+                                                 meta_respondent_age >= 60 ~ "age_greater_60"),
+               i.shelter_index = hh_members_live_adjumani_city/shelter_rooms_sleep_number
         )
 }
